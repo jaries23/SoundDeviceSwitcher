@@ -1,7 +1,4 @@
-# DeviceToggle
-powershell, nircmd, batch
-
-### Preparation Guide (English)
+# Preparation Guide (English)
 
 1. **Download NirCmd**  
    - Visit the official NirSoft website: https://www.nirsoft.net/utils/nircmd.html  
