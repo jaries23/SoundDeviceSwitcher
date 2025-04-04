@@ -18,32 +18,41 @@ Windows에서 두 개의 오디오 장치(예: 이어폰과 스피커)를 **스�
 
 ## ✅ 사용 방법 (Korean)
 
-### 1. NirCmd 다운로드
-- 공식 사이트: https://www.nirsoft.net/utils/nircmd.html  
+### 1. 파일 다운로드
+- GitHub에서 **초록색 Code 버튼** 클릭  
+- **Download ZIP** 선택  
+- 압축 파일을 해제한 후, 폴더에 `.bat`와 `.vbs` 파일이 있는지 확인
+
+### 2. NirCmd 다운로드
+- 공식 사이트: [https://www.nirsoft.net/utils/nircmd.html](https://www.nirsoft.net/utils/nircmd.html)  
 - 페이지 하단에서 **“NirCmd 64-bit”** 다운로드  
 - 압축 해제 경로: `C:\Program Files\nircmd-x64`  
-- 폴더 안에 `nircmd.exe`가 있어야 합니다
+- 해당 폴더 안에 `nircmd.exe` 파일이 있는지 확인
 
-### 2. 시스템 환경 변수 등록
-- 시작 메뉴에서 “시스템 환경 변수 편집” 검색 후 실행  
-- 아래 순서대로 진행:  
-  - "환경 변수(N)..." 클릭  
-  - 시스템 변수에서 `Path` 선택 → "편집(I)..." 클릭  
-  - "새로 만들기(N)" → `C:\Program Files\nircmd-x64` 입력  
-  - 모든 창을 "확인"으로 닫기
+### 3. 시스템 환경 변수 등록
+- 시작 메뉴에서 **“시스템 환경 변수 편집”** 검색 후 실행  
+- **"환경 변수(N)..."** 클릭  
+- **시스템 변수**에서 `Path` 선택 → **"편집(I)..."** 클릭  
+- **"새로 만들기(N)"** 클릭 → `C:\Program Files\nircmd-x64` 입력  
+- 모든 창을 **"확인"**으로 닫기
 
-### 3. PowerShell 오디오 모듈 설치 (최초 1회만)
-- `Win + R` → `powershell` 입력 후 Enter  
-- 아래 명령어를 복사하여 붙여넣고 실행:
+### 4. PowerShell 오디오 모듈 설치 (최초 1회만)
+- `Win + R` 키 누르고 → **powershell** 입력 후 Enter  
+- 아래 명령어를 복사하여 붙여넣기 후 Enter:
   ```powershell
   Install-Module -Name AudioDeviceCmdlets -Scope CurrentUser -Force
   ```
-- 설치 중 저장소 신뢰 여부를 묻는 경우 `Y` 입력 후 Enter
+- 설치 중 저장소 신뢰 여부를 묻는 경우 **Y** 입력 후 Enter
 
-### 4. 오디오 장치 이름 설정
-- `device.bat` 파일의 확장자를 `.txt`로 바꿔 메모장으로 열기  
-- `[설정]` 항목 아래의 `earphone`, `speaker` 값에 본인의 장치 이름 입력  
-- 저장 후 닫고, 확장자를 다시 `.bat`로 변경  
+### 5. 오디오 장치 이름 설정
+- `device.bat` 파일의 확장자를 `.txt`로 변경하여 메모장에서 열기  
+- `[설정]` 아래에 `earphone`, `speaker` 항목을 본인의 장치 이름으로 수정  
+- 저장 후 확장자를 `.bat`로 다시 변경
+
+### 6. 스크립트 실행
+- 폴더 안의 `.vbs` 파일을 더블 클릭  
+- 실행창 없이 조용히 오디오 장치가 전환됨  
+- **Stream Deck**, **AutoHotKey** 등에서 이 `.vbs` 파일을 실행하도록 연결하면 더 편리하게 사용 가능
 
 ---
 
@@ -63,31 +72,40 @@ It’s more than just a toggle—this script includes intelligent features:
 
 ---
 
-### 1. Download NirCmd
-- Official site: https://www.nirsoft.net/utils/nircmd.html  
-- Scroll to the bottom and download **"NirCmd 64-bit"**  
+### 1. Download Files
+- Click the **green Code button** on GitHub  
+- Select **Download ZIP**  
+- Extract the ZIP file and verify that the folder contains `.bat` and `.vbs` files
+
+### 2. Download NirCmd
+- Official site: [https://www.nirsoft.net/utils/nircmd.html](https://www.nirsoft.net/utils/nircmd.html)  
+- Scroll to the bottom and click **“NirCmd 64-bit”**  
 - Extract to: `C:\Program Files\nircmd-x64`  
 - Make sure `nircmd.exe` is in that folder
 
-### 2. Add to System Environment Variables
-- Open the Start menu and search for “Edit the system environment variables”  
-- In the window:  
-  - Click “Environment Variables...”  
-  - Under "System variables", select `Path` → click “Edit...”  
-  - Click “New” → add: `C:\Program Files\nircmd-x64`  
-  - Click OK to close all windows
+### 3. Add to System Environment Variables
+- Open the Start menu and search for **“Edit the system environment variables”**  
+- Click **“Environment Variables...”**  
+- In the **System variables** section, select `Path` → click **“Edit...”**  
+- Click **“New”** → add `C:\Program Files\nircmd-x64`  
+- Click **OK** to close all windows
 
-### 3. Install PowerShell Audio Module (one-time setup)
-- Press `Win + R`, type `powershell`, then press Enter  
-- Paste and run the following command:
+### 4. Install PowerShell Audio Module (One-time Setup)
+- Press **Win + R**, type `powershell`, and press Enter  
+- Copy and paste the following command, then press Enter:
   ```powershell
   Install-Module -Name AudioDeviceCmdlets -Scope CurrentUser -Force
   ```
-- If prompted about trusting the repository, type `Y` and press Enter
+- If prompted about trusting the repository, type **Y** and press Enter
 
-### 4. Set Your Audio Device Names
+### 5. Set Your Audio Device Names
 - Rename `device.bat` to `.txt` and open it in Notepad  
-- Under the `[설정]` section, enter your actual device names for `earphone` and `speaker`  
+- Under the **[Settings]** section, modify the `earphone` and `speaker` entries to match your device names  
 - Save and close the file, then rename the extension back to `.bat`
+
+### 6. Run the Script
+- Double-click the `.vbs` file in the folder  
+- The audio device will switch quietly without opening any command windows  
+- It can be easily integrated with tools like **Stream Deck** or **AutoHotKey** for quick access
 
 ---
