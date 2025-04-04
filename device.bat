@@ -29,12 +29,12 @@ if defined e_found if defined s_found (
         :: 현재 장치가 이어폰이면 스피커로 변경
         nircmd setdefaultsounddevice "%speaker%" 1
         nircmd setdefaultsounddevice "%speaker%" 2
-        nircmd trayballoon "The device has been switched." "Now you can hear sound through the speaker." "shell32.dll,22"
+        nircmd trayballoon "The device has been switched." "%speaker%" "shell32.dll,22"
     ) else (
         :: 현재 장치가 스피커라면 이어폰으로 변경
         nircmd setdefaultsounddevice "%earphone%" 1
         nircmd setdefaultsounddevice "%earphone%" 2
-        nircmd trayballoon "The device has been switched." "Now you can hear sound through the earphones." "shell32.dll,22"
+        nircmd trayballoon "The device has been switched." "%earphone%" "shell32.dll,22"
     )
 ) else (
     :: 장치가 감지되지 않을 경우 알림 표시
