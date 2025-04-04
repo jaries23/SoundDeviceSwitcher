@@ -1,0 +1,2 @@
+# DeviceToggle
+powershell, nircmd, batch
