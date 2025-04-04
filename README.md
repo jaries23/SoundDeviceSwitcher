@@ -60,6 +60,6 @@
 4. **Set Your Audio Device Names**  
    - Right-click the `device.bat` file and choose “Rename”  
    - Change the file extension to `.txt`, then open it in Notepad  
-   - Under the `[Settings]` comment, replace the names next to `earphone` and `speaker` with your actual device names  
+   - Under the `[설정]` comment, replace the names next to `earphone` and `speaker` with your actual device names  
    - Save the file (`Ctrl + S`) and close Notepad  
    - Rename the extension back to `.bat`  
