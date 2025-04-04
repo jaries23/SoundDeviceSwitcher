@@ -2,78 +2,92 @@
 
 > 🔽 English instructions are available below.
 
-Windows에서 두 개의 오디오 장치(예: 이어폰과 스피커)를 간편하게 전환할 수 있는 배치 스크립트입니다.  
-NirCmd와 PowerShell 모듈(AudioDeviceCmdlets)을 활용해 **기본 장치(Default Device)** 및 **기본 통신 장치(Default Communication Device)**를 동시에 설정합니다.  
-트레이 알림으로 현재 상태를 직관적으로 확인할 수 있으며, 스트림덱 같은 단축키 툴과 연동해 사용하기 좋습니다.
+Windows에서 두 개의 오디오 장치(예: 이어폰과 스피커)를 **스마트하게 전환**할 수 있는 배치 스크립트입니다.
+
+단순한 토글이 아닌, 아래와 같은 **똑똑한 기능**을 제공합니다:
+
+- ✅ **두 장치가 모두 연결된 경우에만 전환 동작**
+- 🔁 현재 기본 장치를 확인해 **반대 장치로 자동 전환**
+- 🔊 **기본 재생 장치**와 **기본 통신 장치**를 **동시에 설정**
+- 🔔 작업 완료 후 트레이 알림으로 상태 표시
+- ⚡ 스트림덱, AutoHotKey 등 단축키 매핑 도구와 연동 용이
+
+> 💡 장치가 하나라도 연결되어 있지 않으면, 전환을 시도하지 않고 경고 메시지를 표시합니다.
 
 ---
 
 ## ✅ 사용 방법 (Korean)
 
-1. **NirCmd 다운로드**  
-   - NirSoft 공식 웹사이트 방문: https://www.nirsoft.net/utils/nircmd.html  
-   - 페이지 맨 아래로 스크롤해 "NirCmd 64-bit" 다운로드  
-   - 압축을 `C:\Program Files\nircmd-x64` 폴더에 해제  
-   - 폴더 내부에 `nircmd.exe` 파일이 존재해야 함  
+### 1. NirCmd 다운로드
+- NirSoft 공식 사이트: https://www.nirsoft.net/utils/nircmd.html  
+- 페이지 하단에서 **“NirCmd 64-bit”** 다운로드  
+- 압축 해제 위치: `C:\Program Files\nircmd-x64`  
+- 폴더 안에 `nircmd.exe`가 있어야 함
 
-2. **시스템 환경 변수 등록**  
-   - 시작 메뉴 또는 검색 아이콘 클릭  
-   - “시스템 환경 변수 편집” 입력 후 Enter  
-   - 열리는 창에서 "환경 변수(N)..." 클릭  
-   - 시스템 변수(S) 목록에서 "Path" 선택 후 "편집(I)..." 클릭  
-   - "새로 만들기(N)" 클릭 → `C:\Program Files\nircmd-x64` 입력  
-   - 확인을 눌러 모든 창 닫기  
+### 2. 시스템 환경 변수 등록
+- 시작 메뉴 > “시스템 환경 변수 편집” 검색 및 실행  
+- 아래 순서로 진행:  
+  - "환경 변수(N)..." 클릭  
+  - 시스템 변수에서 `Path` 선택 후 "편집(I)..."  
+  - "새로 만들기(N)" → `C:\Program Files\nircmd-x64` 입력  
+  - 모든 창 확인(OK)으로 닫기
 
-3. **PowerShell 오디오 모듈 설치** (최초 한 번만)  
-   - `Win + R` 누르고 `powershell` 입력 후 Enter  
-   - PowerShell 창에서 아래 명령어 입력 및 실행:  
-     ```
-     Install-Module -Name AudioDeviceCmdlets -Scope CurrentUser -Force
-     ```  
-   - 신뢰되지 않은 저장소에서 설치할지 묻는 경우 `Y` 입력 후 Enter  
+### 3. PowerShell 오디오 모듈 설치 (최초 1회만)
+- `Win + R` → `powershell` 입력 → Enter  
+- 아래 명령어 복사하여 붙여넣기 후 실행:
+  ```powershell
+  Install-Module -Name AudioDeviceCmdlets -Scope CurrentUser -Force
+  ```
+- 설치 중 저장소 신뢰 여부를 묻는 경우 `Y` 입력 후 Enter
 
-4. **오디오 장치 이름 설정**  
-   - `device.bat` 파일을 마우스 오른쪽 버튼으로 클릭하고 "이름 바꾸기" 선택  
-   - 파일 확장자를 `.txt`로 변경한 뒤 메모장으로 열기  
-   - `[설정]` 주석 아래의 `earphone`, `speaker` 옆 장치 이름을 본인의 장치 이름으로 수정  
-   - `Ctrl + S`로 저장 후 메모장 닫기  
-   - 다시 확장자를 `.bat`로 변경하여 저장  
+### 4. 오디오 장치 이름 설정
+- `device.bat` 파일의 확장자를 `.txt`로 바꿔 메모장으로 열기  
+- `[설정]` 아래의 `earphone`, `speaker` 항목에 본인의 장치 이름 입력  
+- 저장(`Ctrl + S`) 후 닫고, 다시 확장자를 `.bat`로 변경  
 
 ---
 
 ## ✅ How to Use (English)
 
-This is a batch script that allows you to toggle between two audio output devices (e.g., headphones and speakers) on Windows.  
-It uses **NirCmd** and the **AudioDeviceCmdlets** PowerShell module to switch both the **Default Playback Device** and **Default Communication Device** simultaneously.  
-You’ll get a tray notification when switching, and it’s perfect for pairing with hotkey tools like Stream Deck.
+**SoundDeviceSwitcher** is a batch script for **smartly toggling** between two audio devices on Windows (e.g., headphones and speakers).
+
+More than a simple toggle, it features:
+
+- ✅ **Only switches if both devices are connected**
+- 🔁 Detects current default device and toggles to the other
+- 🔊 Simultaneously sets **Default Playback Device** and **Default Communication Device**
+- 🔔 Displays tray notifications after switching
+- ⚡ Easily integrates with hotkey tools like Stream Deck or AutoHotKey
+
+> 💡 If either device is not connected, the script will cancel the operation and show a warning instead of switching.
 
 ---
 
-1. **Download NirCmd**  
-   - Visit the official NirSoft website: https://www.nirsoft.net/utils/nircmd.html  
-   - Scroll to the bottom and download "NirCmd 64-bit"  
-   - Extract the archive to the folder: `C:\Program Files\nircmd-x64`  
-   - Make sure the folder contains `nircmd.exe`  
+### 1. Download NirCmd
+- Official site: https://www.nirsoft.net/utils/nircmd.html  
+- Scroll down and download **"NirCmd 64-bit"**  
+- Extract to: `C:\Program Files\nircmd-x64`  
+- Ensure `nircmd.exe` is in that folder
 
-2. **Add to System Environment Variables**  
-   - Open the Start menu or click the search icon  
-   - Type “Edit the system environment variables” and press Enter  
-   - In the window that appears, click “Environment Variables...”  
-   - Under the "System variables" section, select "Path" and click "Edit..."  
-   - Click “New” and enter: `C:\Program Files\nircmd-x64`  
-   - Click OK to close all dialogs  
+### 2. Add to System Environment Variables
+- Open Start menu → search for “Edit the system environment variables”  
+- In the window:  
+  - Click “Environment Variables...”  
+  - Under "System variables", select `Path` and click “Edit...”  
+  - Click “New” → add: `C:\Program Files\nircmd-x64`  
+  - Click OK to close all windows
 
-3. **Install PowerShell Audio Module** (only once)  
-   - Press `Win + R`, type `powershell`, then press Enter  
-   - In the PowerShell window, run:  
-     ```
-     Install-Module -Name AudioDeviceCmdlets -Scope CurrentUser -Force
-     ```  
-   - If prompted about an untrusted repository, type `Y` and press Enter  
+### 3. Install PowerShell Audio Module (once)
+- Press `Win + R`, type `powershell`, and press Enter  
+- Paste and run the following command:
+  ```powershell
+  Install-Module -Name AudioDeviceCmdlets -Scope CurrentUser -Force
+  ```
+- If prompted about repository trust, type `Y` and press Enter
 
-4. **Set Your Audio Device Names**  
-   - Right-click the `device.bat` file and choose “Rename”  
-   - Change the file extension to `.txt`, then open it in Notepad  
-   - Under the `[설정]` comment, replace the names next to `earphone` and `speaker` with your actual device names  
-   - Save the file (`Ctrl + S`) and close Notepad  
-   - Rename the extension back to `.bat`
+### 4. Set Your Audio Device Names
+- Rename `device.bat` to `.txt` and open in Notepad  
+- Under `[설정]`, set your actual device names for `earphone` and `speaker`  
+- Save and close, then rename the file extension back to `.bat`
+
+---
