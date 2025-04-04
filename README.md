@@ -16,6 +16,20 @@ Windows에서 두 개의 오디오 장치(예: 이어폰과 스피커)를 **스�
 
 ---
 
+**SoundDeviceSwitcher** is a batch script for **smartly toggling** between two audio devices on Windows (e.g., headphones and speakers).
+
+More than a simple toggle, it features:
+
+- ✅ **Only switches if both devices are connected**
+- 🔁 Detects current default device and toggles to the other
+- 🔊 Simultaneously sets **Default Playback Device** and **Default Communication Device**
+- 🔔 Displays tray notifications after switching
+- ⚡ Easily integrates with hotkey tools like Stream Deck or AutoHotKey
+
+> 💡 If either device is not connected, the script will cancel the operation and show a warning instead of switching.
+
+---
+
 ## ✅ 사용 방법 (Korean)
 
 ### 1. NirCmd 다운로드
@@ -48,20 +62,6 @@ Windows에서 두 개의 오디오 장치(예: 이어폰과 스피커)를 **스�
 ---
 
 ## ✅ How to Use (English)
-
-**SoundDeviceSwitcher** is a batch script for **smartly toggling** between two audio devices on Windows (e.g., headphones and speakers).
-
-More than a simple toggle, it features:
-
-- ✅ **Only switches if both devices are connected**
-- 🔁 Detects current default device and toggles to the other
-- 🔊 Simultaneously sets **Default Playback Device** and **Default Communication Device**
-- 🔔 Displays tray notifications after switching
-- ⚡ Easily integrates with hotkey tools like Stream Deck or AutoHotKey
-
-> 💡 If either device is not connected, the script will cancel the operation and show a warning instead of switching.
-
----
 
 ### 1. Download NirCmd
 - Official site: https://www.nirsoft.net/utils/nircmd.html  
