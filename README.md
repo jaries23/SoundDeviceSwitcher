@@ -1,4 +1,12 @@
+# 🎧 SoundDeviceSwitcher
+
 > 🔽 English instructions are available below.
+
+Windows에서 두 개의 오디오 장치(예: 이어폰과 스피커)를 간편하게 전환할 수 있는 배치 스크립트입니다.  
+NirCmd와 PowerShell 모듈(AudioDeviceCmdlets)을 활용해 **기본 장치(Default Device)** 및 **기본 통신 장치(Default Communication Device)**를 동시에 설정합니다.  
+트레이 알림으로 현재 상태를 직관적으로 확인할 수 있으며, 스트림덱 같은 단축키 툴과 연동해 사용하기 좋습니다.
+
+---
 
 ## ✅ 사용 방법 (Korean)
 
@@ -35,6 +43,12 @@
 
 ## ✅ How to Use (English)
 
+This is a batch script that allows you to toggle between two audio output devices (e.g., headphones and speakers) on Windows.  
+It uses **NirCmd** and the **AudioDeviceCmdlets** PowerShell module to switch both the **Default Playback Device** and **Default Communication Device** simultaneously.  
+You’ll get a tray notification when switching, and it’s perfect for pairing with hotkey tools like Stream Deck.
+
+---
+
 1. **Download NirCmd**  
    - Visit the official NirSoft website: https://www.nirsoft.net/utils/nircmd.html  
    - Scroll to the bottom and download "NirCmd 64-bit"  
@@ -62,4 +76,4 @@
    - Change the file extension to `.txt`, then open it in Notepad  
    - Under the `[설정]` comment, replace the names next to `earphone` and `speaker` with your actual device names  
    - Save the file (`Ctrl + S`) and close Notepad  
-   - Rename the extension back to `.bat`  
+   - Rename the extension back to `.bat`
