@@ -8,12 +8,12 @@ setlocal
 set earphone=Final VR2000
 set speaker=Marshall Willen
 
-set SCRIPT_DIR=%~dp0
-set ASSET_DIR=%SCRIPT_DIR%assets
-
 set e_found=
 set s_found=
 set current=0
+
+set SCRIPT_DIR=%~dp0
+set ASSET_DIR=%SCRIPT_DIR%assets
 
 :: [1단계] 장치 연결 유무 확인
 for /f "delims=" %%i in ('powershell -Command "Import-Module AudioDeviceCmdlets; Get-AudioDevice -List | Select-Object -ExpandProperty Name | ForEach-Object { $_.Split('(')[0].Trim() }"') do (
@@ -32,16 +32,16 @@ if defined e_found if defined s_found (
         :: 현재 장치가 이어폰이면 스피커로 변경
         nircmd setdefaultsounddevice "%speaker%" 1
         nircmd setdefaultsounddevice "%speaker%" 2
-        powershell -Command "Import-Module BurntToast; New-BurntToastNotification -Text 'The device has been switched.', '%speaker%' -AppLogo '%ASSET_DIR:\=\\%\\icon_speaker.png' -UniqueIdentifier 'AudioToggle'"
+        powershell -Command "Import-Module BurntToast; New-BurntToastNotification -Text 'The device has been switched.', '%speaker%' -AppLogo '%ASSET_DIR:\=\\%\\icon_speaker.png' -UniqueIdentifier 'DeviceToggle'"
     ) else (
         :: 현재 장치가 스피커라면 이어폰으로 변경
         nircmd setdefaultsounddevice "%earphone%" 1
         nircmd setdefaultsounddevice "%earphone%" 2
-        powershell -Command "Import-Module BurntToast; New-BurntToastNotification -Text 'The device has been switched.', '%earphone%' -AppLogo '%ASSET_DIR:\=\\%\\icon_earphone.png' -UniqueIdentifier 'AudioToggle'"
+        powershell -Command "Import-Module BurntToast; New-BurntToastNotification -Text 'The device has been switched.', '%earphone%' -AppLogo '%ASSET_DIR:\=\\%\\icon_earphone.png' -UniqueIdentifier 'DeviceToggle'"
     )
 ) else (
     :: 장치가 감지되지 않을 경우 알림 표시
-    powershell -Command "Import-Module BurntToast; New-BurntToastNotification -Text 'The device is unreachable.', 'Please check your device connection or ensure the device is powered on.' -AppLogo '%ASSET_DIR:\=\\%\\icon_warning.png' -UniqueIdentifier 'AudioToggle'"
+    powershell -Command "Import-Module BurntToast; New-BurntToastNotification -Text 'The device is unreachable.', 'Please check your device connection or ensure the device is powered on.' -AppLogo '%ASSET_DIR:\=\\%\\icon_warning.png' -UniqueIdentifier 'DeviceToggle'"
 )
 
 endlocal
