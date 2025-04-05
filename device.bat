@@ -8,18 +8,21 @@ setlocal
 set earphone=Final VR2000
 set speaker=Marshall Willen
 
+set SCRIPT_DIR=%~dp0
+set ASSET_DIR=%SCRIPT_DIR%assets
+
 set e_found=
 set s_found=
 set current=0
 
 :: [1단계] 장치 연결 유무 확인
-for /f "delims=" %%i in ('powershell -Command "Get-AudioDevice -List | Select-Object -ExpandProperty Name | ForEach-Object { $_.Split('(')[0].Trim() }"') do (
+for /f "delims=" %%i in ('powershell -Command "Import-Module AudioDeviceCmdlets; Get-AudioDevice -List | Select-Object -ExpandProperty Name | ForEach-Object { $_.Split('(')[0].Trim() }"') do (
     if "%%i"=="%earphone%" set e_found=1
     if "%%i"=="%speaker%" set s_found=1
 )
 
 :: [2단계] 현재 기본 설정 장치 확인
-for /f "delims=" %%i in ('powershell -Command "Get-AudioDevice -List | Where-Object { $_.Type -eq 'Playback' -and $_.Default -eq $true } | Select-Object -ExpandProperty Name | ForEach-Object { $_.Split('(')[0].Trim() }"') do (
+for /f "delims=" %%i in ('powershell -Command "Import-Module AudioDeviceCmdlets; Get-AudioDevice -List | Where-Object { $_.Type -eq 'Playback' -and $_.Default -eq $true } | Select-Object -ExpandProperty Name | ForEach-Object { $_.Split('(')[0].Trim() }"') do (
     if "%%i"=="%earphone%" set current=1
 )
 
@@ -29,16 +32,16 @@ if defined e_found if defined s_found (
         :: 현재 장치가 이어폰이면 스피커로 변경
         nircmd setdefaultsounddevice "%speaker%" 1
         nircmd setdefaultsounddevice "%speaker%" 2
-        nircmd trayballoon "The device has been switched." "%speaker%" "shell32.dll,22"
+        powershell -Command "Import-Module BurntToast; New-BurntToastNotification -Text 'The device has been switched.', '%speaker%' -AppLogo '%ASSET_DIR:\=\\%\\icon_speaker.png' -UniqueIdentifier 'AudioToggle'"
     ) else (
         :: 현재 장치가 스피커라면 이어폰으로 변경
         nircmd setdefaultsounddevice "%earphone%" 1
         nircmd setdefaultsounddevice "%earphone%" 2
-        nircmd trayballoon "The device has been switched." "%earphone%" "shell32.dll,22"
+        powershell -Command "Import-Module BurntToast; New-BurntToastNotification -Text 'The device has been switched.', '%earphone%' -AppLogo '%ASSET_DIR:\=\\%\\icon_earphone.png' -UniqueIdentifier 'AudioToggle'"
     )
 ) else (
     :: 장치가 감지되지 않을 경우 알림 표시
-    nircmd trayballoon "The device is unreachable." "Please check your device connection or ensure the device is powered on." "shell32.dll,22"
+    powershell -Command "Import-Module BurntToast; New-BurntToastNotification -Text 'The device is unreachable.', 'Please check your device connection or ensure the device is powered on.' -AppLogo '%ASSET_DIR:\=\\%\\icon_warning.png' -UniqueIdentifier 'AudioToggle'"
 )
 
 endlocal
