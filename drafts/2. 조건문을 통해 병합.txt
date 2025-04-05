@@ -1,0 +1,11 @@
+@echo off
+
+if exist earphone.txt (
+    nircmd.exe setdefaultsounddevice "Marshall Willen"
+    nircmd.exe setdefaultsounddevice "Marshall Willen" 2
+    rename earphone.txt speaker.txt
+) else if exist speaker.txt (
+    nircmd.exe setdefaultsounddevice "Final VR2000"
+    nircmd.exe setdefaultsounddevice "Final VR2000" 2
+    rename speaker.txt earphone.txt
+)
