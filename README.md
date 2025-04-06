@@ -29,7 +29,7 @@ Windows에서 두 개의 오디오 장치(예: 이어폰과 스피커)를 **스�
 ### 2. PowerShell 모듈 설치 (최초 1회만)
 
 #### ✅ 자동 설치 방법
-- `Install_Modules.ps1` 파일을 **마우스 오른쪽 클릭 → PowerShell로 실행(R)**  
+- `Install_Modules.bat` 파일을 **마우스 오른쪽 클릭 → 관리자 권한으로 실행**  
 - 아래 작업이 자동으로 실행됩니다:
   - ✅ 실행 정책을 `RemoteSigned`로 설정  
   - 🎧 `AudioDeviceCmdlets` 모듈 설치 (이미 설치된 경우 생략)  
@@ -42,7 +42,7 @@ Windows에서 두 개의 오디오 장치(예: 이어폰과 스피커)를 **스�
 - > ⏳ **설치 후 창이 자동으로 닫히지 않으니, Enter 키를 눌러 수동으로 닫아주세요.**
 
 #### 🛠 수동 설치 방법
-`Install_Modules.ps1` 스크립트를 사용할 수 없는 경우, 아래 명령어를 PowerShell에 직접 복사해서 붙여넣어 실행하세요:
+`Install_Modules.bat` 를 통해 모듈을 설치할 수 없는 경우, 아래 명령어를 PowerShell에 직접 복사해서 붙여넣어 실행하세요:
 
 ```powershell
 # 실행 정책을 RemoteSigned로 변경
@@ -111,7 +111,7 @@ It’s more than just a toggle—this script includes intelligent features:
 ### 2. Install PowerShell Modules (one-time setup)
 
 #### ✅ Automatic Method
-- Right-click `Install_Modules.ps1` and select **Run with PowerShell**  
+- Right-click `Install_Modules.bat` and select **Run as Administrator**  
 - The following will be performed automatically:
   - ✅ Set execution policy to `RemoteSigned`  
   - 🎧 Install `AudioDeviceCmdlets` module (skipped if already installed)  
