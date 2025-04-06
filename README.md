@@ -27,6 +27,8 @@ Windows에서 두 개의 오디오 장치(예: 이어폰과 스피커)를 **스�
   - `Install_Modules.ps1`
 
 ### 2. PowerShell 모듈 설치 (최초 1회만)
+
+#### ✅ 자동 설치 방법
 - `Install_Modules.ps1` 파일을 **마우스 오른쪽 클릭 → PowerShell로 실행(R)**  
 - 아래 작업이 자동으로 실행됩니다:
   - ✅ 실행 정책을 `RemoteSigned`로 설정  
@@ -38,6 +40,24 @@ Windows에서 두 개의 오디오 장치(예: 이어폰과 스피커)를 **스�
   👋 설치가 완료되었습니다! 창을 닫으려면 Enter 키를 누르세요
   ```
 - > ⏳ **설치 후 창이 자동으로 닫히지 않으니, Enter 키를 눌러 수동으로 닫아주세요.**
+
+#### 🛠 수동 설치 방법
+`Install_Modules.ps1` 스크립트를 사용할 수 없는 경우, 아래 명령어를 PowerShell에 직접 복사해서 붙여넣어 실행하세요:
+
+```powershell
+# 실행 정책을 RemoteSigned로 변경
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force
+
+# AudioDeviceCmdlets 설치
+Install-Module -Name AudioDeviceCmdlets -Scope CurrentUser -Force
+
+# BurntToast 설치
+Install-Module -Name BurntToast -Scope CurrentUser -Force
+```
+
+> ⚠️ 모듈 설치 중 'NuGet 제공자' 관련 메시지가 나올 경우, `Y`를 입력하고 Enter 키를 눌러 진행하세요.
+
+---
 
 ### 3. NirCmd 다운로드
 - 공식 사이트: [https://www.nirsoft.net/utils/nircmd.html](https://www.nirsoft.net/utils/nircmd.html)  
@@ -89,17 +109,26 @@ It’s more than just a toggle—this script includes intelligent features:
   - `Install_Modules.ps1`
 
 ### 2. Install PowerShell Modules (one-time setup)
+
+#### ✅ Automatic Method
 - Right-click `Install_Modules.ps1` and select **Run with PowerShell**  
 - The following will be performed automatically:
   - ✅ Set execution policy to `RemoteSigned`  
   - 🎧 Install `AudioDeviceCmdlets` module (skipped if already installed)  
   - 🔔 Install `BurntToast` module (skipped if already installed)
-- Once complete, you'll see:
-  ```
-  🎉 All set! You can now use the batch script for audio switching and notifications.
-  👋 Installation completed! Press Enter to close this window.
-  ```
-- > ⏳ **The window won’t close automatically—please press Enter to exit manually.**
+
+#### 🛠 Manual Method
+If you can't run the script, copy and paste the following into PowerShell manually:
+
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force
+Install-Module -Name AudioDeviceCmdlets -Scope CurrentUser -Force
+Install-Module -Name BurntToast -Scope CurrentUser -Force
+```
+
+> ⚠️ If prompted to install NuGet provider, type `Y` and press Enter.
+
+---
 
 ### 3. Download NirCmd
 - Official site: [https://www.nirsoft.net/utils/nircmd.html](https://www.nirsoft.net/utils/nircmd.html)  
