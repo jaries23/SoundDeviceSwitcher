@@ -1,15 +1,15 @@
 # SoundDeviceSwitcher v2.0.1
 
-This patch release adds a notification sound for in-app popup toasts and a setting to disable update notifications.
+이번 패치 릴리스에서는 앱 내부 팝업 토스트에 알림 사운드를 추가하고, 업데이트 알림을 끌 수 있는 설정을 넣었습니다.
 
-## Changes
+## 변경 사항
 
-- Play a Windows system notification sound when a toast popup appears.
-- Keep the existing custom popup UI and map sound by notification type.
-- Log sound playback failures instead of interrupting the app.
-- Add a setting to turn automatic update notifications on or off.
+- 팝업 토스트가 표시될 때 Windows 시스템 알림음을 재생합니다.
+- 기존 커스텀 팝업 UI는 유지하고, 알림 종류에 따라 사운드를 다르게 재생합니다.
+- 사운드 재생에 실패하더라도 앱이 중단되지 않도록 로그만 남깁니다.
+- 자동 업데이트 알림을 켜거나 끌 수 있는 설정을 추가했습니다.
 
-## Included Assets
+## 포함 파일
 
 - `SoundDeviceSwitcher-v2.0.1-setup.exe`
 - `SoundDeviceSwitcher-v2.0.1-win-x64.zip`
