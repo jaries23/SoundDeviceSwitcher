@@ -21,7 +21,5 @@ This release replaces the previous script-based workflow with a standalone Windo
 
 ## Included Assets
 
-- `setup.exe`
 - `SoundDeviceSwitcher-v2.0.0-setup.exe`
 - `SoundDeviceSwitcher-v2.0.0-win-x64.zip`
-- `SHA256SUMS.txt`

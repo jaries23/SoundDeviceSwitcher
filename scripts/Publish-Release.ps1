@@ -76,7 +76,6 @@ $portableStageDir = Join-Path $stagingRoot $portableFolderName
 $releaseDir = Join-Path $artifactRoot ("release\\v{0}" -f $version)
 $zipPath = Join-Path $releaseDir ("{0}.zip" -f $portableFolderName)
 $setupPath = Join-Path $releaseDir ("SoundDeviceSwitcher-v{0}-setup.exe" -f $version)
-$hashPath = Join-Path $releaseDir "SHA256SUMS.txt"
 
 New-CleanDirectory -Path $publishDir
 New-CleanDirectory -Path $portableStageDir
@@ -139,15 +138,6 @@ if (-not $SkipInstaller)
         $assetPaths.Add($setupPath)
     }
 }
-
-$hashLines = foreach ($assetPath in $assetPaths)
-{
-    $hash = Get-FileHash -Path $assetPath -Algorithm SHA256
-    "{0}  {1}" -f $hash.Hash.ToLowerInvariant(), (Split-Path $assetPath -Leaf)
-}
-
-Set-Content -Path $hashPath -Value $hashLines
-$assetPaths.Add($hashPath)
 
 Write-Host ""
 Write-Host "Release artifacts:"
