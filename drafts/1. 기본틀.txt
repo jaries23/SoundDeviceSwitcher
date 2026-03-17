@@ -1,4 +1,0 @@
-@echo off
-
-nircmd.exe setdefaultsounddevice "Marshall Willen"
-nircmd.exe setdefaultsounddevice "Marshall Willen" 2

@@ -1,0 +1,27 @@
+@echo off
+
+set earphone=0
+set speaker=0
+set ready=0
+
+for /f "delims=" %%i in ('powershell -Command "Get-WmiObject -Class Win32_PnPEntity | Where-Object { $_.DeviceID -like '*MMDEVAPI*' } | Select-Object -ExpandProperty Name | ForEach-Object { $_.Split('(')[0].Trim() }"') do (
+    if "%%i"=="Final VR2000" set earphone=1
+    if "%%i"=="Marshall Willen" set speaker=1
+)
+if %earphone%==1 if %speaker%==1 set ready=1
+
+if %ready%==1 (
+    if exist earphone.txt (
+        rename earphone.txt speaker.txt
+        nircmd setdefaultsounddevice "Marshall Willen"
+        nircmd setdefaultsounddevice "Marshall Willen" 2
+        nircmd trayballoon "The device has been switched." "Now you can hear sound through the speaker." "shell32.dll,22" 5000
+    ) else if exist speaker.txt (
+        rename speaker.txt earphone.txt
+        nircmd setdefaultsounddevice "Final VR2000"
+        nircmd setdefaultsounddevice "Final VR2000" 2
+        nircmd trayballoon "The device has been switched." "Now you can hear sound through the earphones." "shell32.dll,22" 5000
+    )
+) else (
+    nircmd trayballoon "The device is unreachable." "Please check your device connection or ensure the device is powered on." "shell32.dll,22" 5000
+)

@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>SoundDeviceSwitcher</AssemblyName>
+    <RootNamespace>SoundDeviceSwitcher.App</RootNamespace>
+    <Product>SoundDeviceSwitcher</Product>
+    <Title>SoundDeviceSwitcher</Title>
+    <FileDescription>SoundDeviceSwitcher</FileDescription>
+    <ApplicationIcon>assets\icons\default.ico</ApplicationIcon>
+    <Version>2.0.0</Version>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <FileVersion>2.0.0.0</FileVersion>
+    <InformationalVersion>2.0.0</InformationalVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="assets\icons\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>

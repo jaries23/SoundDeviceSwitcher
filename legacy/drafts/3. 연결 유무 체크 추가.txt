@@ -1,0 +1,25 @@
+@echo off
+
+set earphone=disconnected
+set speaker=disconnected
+
+for /f "delims=" %%i in ('powershell -Command "Get-WmiObject -Class Win32_PnPEntity | Where-Object { $_.DeviceID -like '*MMDEVAPI*' } | Select-Object -ExpandProperty Name | ForEach-Object { $_.Split('(')[0].Trim() }"') do (
+    if "%%i"=="Final VR2000" set earphone=connected
+    if "%%i"=="Marshall Willen" set speaker=connected
+)
+
+if %earphone%==connected (
+    if %speaker%==connected (
+        if exist earphone.txt (
+            nircmd setdefaultsounddevice "Marshall Willen"
+            nircmd setdefaultsounddevice "Marshall Willen" 2
+            rename earphone.txt speaker.txt
+             
+        ) else if exist speaker.txt (
+            nircmd setdefaultsounddevice "Final VR2000"
+            nircmd setdefaultsounddevice "Final VR2000" 2
+            rename speaker.txt earphone.txt
+            
+        )
+    )
+)
