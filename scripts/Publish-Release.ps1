@@ -75,8 +75,7 @@ $portableFolderName = "SoundDeviceSwitcher-v{0}-{1}" -f $version, $RuntimeIdenti
 $portableStageDir = Join-Path $stagingRoot $portableFolderName
 $releaseDir = Join-Path $artifactRoot ("release\\v{0}" -f $version)
 $zipPath = Join-Path $releaseDir ("{0}.zip" -f $portableFolderName)
-$setupPath = Join-Path $releaseDir "setup.exe"
-$versionedSetupPath = Join-Path $releaseDir ("SoundDeviceSwitcher-v{0}-setup.exe" -f $version)
+$setupPath = Join-Path $releaseDir ("SoundDeviceSwitcher-v{0}-setup.exe" -f $version)
 $hashPath = Join-Path $releaseDir "SHA256SUMS.txt"
 
 New-CleanDirectory -Path $publishDir
@@ -138,8 +137,6 @@ if (-not $SkipInstaller)
         }
 
         $assetPaths.Add($setupPath)
-        Copy-Item -Path $setupPath -Destination $versionedSetupPath -Force
-        $assetPaths.Add($versionedSetupPath)
     }
 }
 

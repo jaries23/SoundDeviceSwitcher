@@ -33,7 +33,7 @@ WizardStyle=modern
 Compression=lzma2
 SolidCompression=yes
 OutputDir={#MyOutputDir}
-OutputBaseFilename=setup
+OutputBaseFilename={#MyAppName}-v{#MyAppVersion}-setup
 SetupIconFile=..\src\SoundDeviceSwitcher.App\assets\icons\default.ico
 UninstallDisplayIcon={app}\SoundDeviceSwitcher.exe
 
