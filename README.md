@@ -17,8 +17,8 @@ SoundDeviceSwitcher는 Windows에서 두 개의 재생 장치를 빠르게 전�
 
 ### 릴리즈 파일
 
-- `SoundDeviceSwitcher-v2.0.0-setup.exe`: 설치형 빌드
-- `SoundDeviceSwitcher-v2.0.0-win-x64.zip`: 포터블 빌드
+- `SoundDeviceSwitcher-v2.0.1-setup.exe`: 설치형 빌드
+- `SoundDeviceSwitcher-v2.0.1-win-x64.zip`: 포터블 빌드
 
 ### 빌드
 
@@ -51,8 +51,8 @@ SoundDeviceSwitcher is a Windows tray app for switching between two playback dev
 
 ### Release Assets
 
-- `SoundDeviceSwitcher-v2.0.0-setup.exe`: installer build
-- `SoundDeviceSwitcher-v2.0.0-win-x64.zip`: portable build
+- `SoundDeviceSwitcher-v2.0.1-setup.exe`: installer build
+- `SoundDeviceSwitcher-v2.0.1-win-x64.zip`: portable build
 
 ### Build
 

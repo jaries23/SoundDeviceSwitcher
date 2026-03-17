@@ -43,6 +43,7 @@ internal sealed class MainShellForm : Form
     private readonly CheckBox _startWithWindowsCheckBox;
     private readonly CheckBox _startMinimizedAtStartupCheckBox;
     private readonly CheckBox _minimizeToTrayOnCloseCheckBox;
+    private readonly CheckBox _enableUpdateNotificationsCheckBox;
     private readonly Label _deviceAIconLabel;
     private readonly Label _deviceBIconLabel;
     private readonly ComboBox _languageComboBox;
@@ -101,6 +102,7 @@ internal sealed class MainShellForm : Form
     private bool _hotkeySelectionChangedWhileDroppedDown;
     private bool _initialStateLoaded;
     private bool _postInstallCloseGuardPending;
+    private bool _updateCheckInProgress;
     private TableLayoutPanel? _shellLayout;
 
     public MainShellForm(AppServices services, bool launchedFromStartup = false, bool launchedFromPostInstall = false)
@@ -223,6 +225,8 @@ internal sealed class MainShellForm : Form
         _startMinimizedAtStartupCheckBox.CheckedChanged += (_, _) => AutoSaveCurrentSelections();
         _minimizeToTrayOnCloseCheckBox = new CheckBox { AutoSize = true };
         _minimizeToTrayOnCloseCheckBox.CheckedChanged += (_, _) => AutoSaveCurrentSelections();
+        _enableUpdateNotificationsCheckBox = new CheckBox { AutoSize = true, Checked = true };
+        _enableUpdateNotificationsCheckBox.CheckedChanged += (_, _) => HandleUpdateNotificationsChanged();
         _deviceAIconLabel = CreateFieldLabel();
         _deviceBIconLabel = CreateFieldLabel();
         _deviceALabel = CreateFieldLabel();
@@ -794,11 +798,13 @@ internal sealed class MainShellForm : Form
         layout.SetColumnSpan(_startMinimizedAtStartupCheckBox, 2);
         layout.Controls.Add(_minimizeToTrayOnCloseCheckBox, 0, 5);
         layout.SetColumnSpan(_minimizeToTrayOnCloseCheckBox, 2);
-        layout.Controls.Add(_deviceAIconLabel, 0, 6);
-        layout.Controls.Add(primaryIconSelector, 1, 6);
-        layout.Controls.Add(_deviceBIconLabel, 0, 7);
-        layout.Controls.Add(secondaryIconSelector, 1, 7);
-        layout.Controls.Add(actionRow, 0, 8);
+        layout.Controls.Add(_enableUpdateNotificationsCheckBox, 0, 6);
+        layout.SetColumnSpan(_enableUpdateNotificationsCheckBox, 2);
+        layout.Controls.Add(_deviceAIconLabel, 0, 7);
+        layout.Controls.Add(primaryIconSelector, 1, 7);
+        layout.Controls.Add(_deviceBIconLabel, 0, 8);
+        layout.Controls.Add(secondaryIconSelector, 1, 8);
+        layout.Controls.Add(actionRow, 0, 9);
         layout.SetColumnSpan(actionRow, 2);
 
         return layout;
@@ -871,6 +877,7 @@ internal sealed class MainShellForm : Form
             _startWithWindowsCheckBox.Text = _services.Localizer.Get("StartWithWindowsLabel");
             _startMinimizedAtStartupCheckBox.Text = _services.Localizer.Get("StartMinimizedAtStartupLabel");
             _minimizeToTrayOnCloseCheckBox.Text = _services.Localizer.Get("MinimizeToTrayOnCloseLabel");
+            _enableUpdateNotificationsCheckBox.Text = _services.Localizer.Get("EnableUpdateNotificationsLabel");
             _deviceAIconLabel.Text = _services.Localizer.Get("DeviceAIconLabel");
             _deviceBIconLabel.Text = _services.Localizer.Get("DeviceBIconLabel");
             _systemThemeRadioButton.Text = _services.Localizer.Get("ThemeModeSystem");
@@ -1064,6 +1071,25 @@ internal sealed class MainShellForm : Form
         AutoSaveCurrentSelections(_services.Localizer.Get("StatusThemeChanged"));
     }
 
+    private void HandleUpdateNotificationsChanged()
+    {
+        if (_isLoading)
+        {
+            return;
+        }
+
+        if (_enableUpdateNotificationsCheckBox.Checked)
+        {
+            BeginUpdateCheck();
+        }
+        else
+        {
+            ClearAvailableUpdate();
+        }
+
+        AutoSaveCurrentSelections();
+    }
+
     private void SafeLoadInitialState()
     {
         try
@@ -1174,6 +1200,7 @@ internal sealed class MainShellForm : Form
         _startWithWindowsCheckBox.Checked = config.StartWithWindows;
         _startMinimizedAtStartupCheckBox.Checked = config.StartMinimizedAtStartup;
         _minimizeToTrayOnCloseCheckBox.Checked = config.MinimizeToTrayOnClose;
+        _enableUpdateNotificationsCheckBox.Checked = config.EnableUpdateNotifications;
         SelectDevice(_primaryDeviceComboBox, config.PrimaryDevice.Id);
         SelectDevice(_secondaryDeviceComboBox, config.SecondaryDevice.Id);
         SelectIcon(_primaryIconComboBox, config.PrimaryIconFileName);
@@ -1789,6 +1816,7 @@ internal sealed class MainShellForm : Form
             StartWithWindows = _startWithWindowsCheckBox.Checked,
             StartMinimizedAtStartup = _startWithWindowsCheckBox.Checked && _startMinimizedAtStartupCheckBox.Checked,
             MinimizeToTrayOnClose = _minimizeToTrayOnCloseCheckBox.Checked,
+            EnableUpdateNotifications = _enableUpdateNotificationsCheckBox.Checked,
             PrimaryDevice = new DeviceSelection
             {
                 Id = primaryDevice.Id,
@@ -1839,13 +1867,27 @@ internal sealed class MainShellForm : Form
 
     private async void BeginUpdateCheck()
     {
+        if (_updateCheckInProgress || !_enableUpdateNotificationsCheckBox.Checked || IsDisposed)
+        {
+            return;
+        }
+
+        _updateCheckInProgress = true;
+
+        try
+        {
         var updateRelease = await _services.UpdateChecker.CheckForUpdateAsync();
-        if (updateRelease is null || IsDisposed)
+        if (updateRelease is null || IsDisposed || !_enableUpdateNotificationsCheckBox.Checked)
         {
             return;
         }
 
         ApplyAvailableUpdate(updateRelease);
+        }
+        finally
+        {
+            _updateCheckInProgress = false;
+        }
     }
 
     private void ApplyAvailableUpdate(UpdateReleaseInfo updateRelease)
@@ -1882,6 +1924,13 @@ internal sealed class MainShellForm : Form
             _services.UpdateChecker.CurrentVersionDisplay,
             GetSelectedThemeMode());
         dialog.ShowDialog(this);
+    }
+
+    private void ClearAvailableUpdate()
+    {
+        _availableUpdate = null;
+        _updateDialogShown = false;
+        _statusActionButton.Visible = false;
     }
 
     private static List<LanguageChoice> BuildLanguageChoices()

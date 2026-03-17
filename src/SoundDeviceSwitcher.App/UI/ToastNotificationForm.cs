@@ -1,4 +1,6 @@
+using System.Media;
 using System.Drawing.Drawing2D;
+using SoundDeviceSwitcher.App.Diagnostics;
 using SoundDeviceSwitcher.App.Theming;
 using SoundDeviceSwitcher.App.UI.Controls;
 
@@ -56,6 +58,7 @@ internal sealed class ToastNotificationForm : Form
         {
             PositionToast();
             UpdateRoundedRegion();
+            TryPlaySound(icon);
             _closeTimer.Start();
         };
     }
@@ -212,6 +215,25 @@ internal sealed class ToastNotificationForm : Form
             ToolTipIcon.Error => _palette.ErrorText,
             _ => _palette.Accent
         };
+    }
+
+    private static void TryPlaySound(ToolTipIcon icon)
+    {
+        try
+        {
+            var sound = icon switch
+            {
+                ToolTipIcon.Warning => SystemSounds.Exclamation,
+                ToolTipIcon.Error => SystemSounds.Hand,
+                _ => SystemSounds.Asterisk
+            };
+
+            sound.Play();
+        }
+        catch (Exception ex)
+        {
+            AppLogger.LogException("Toast sound playback", ex);
+        }
     }
 
     private static GraphicsPath CreateRoundedPath(Rectangle bounds, int radius)

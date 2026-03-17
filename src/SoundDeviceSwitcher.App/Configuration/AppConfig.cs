@@ -18,6 +18,8 @@ public sealed class AppConfig
 
     public bool MinimizeToTrayOnClose { get; set; }
 
+    public bool EnableUpdateNotifications { get; set; } = true;
+
     public DeviceSelection PrimaryDevice { get; set; } = new();
 
     public DeviceSelection SecondaryDevice { get; set; } = new();
