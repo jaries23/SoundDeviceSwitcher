@@ -25,17 +25,21 @@ AppPublisherURL={#MyAppUrl}
 AppSupportURL={#MyAppUrl}
 AppUpdatesURL={#MyAppUrl}/releases
 DefaultDirName={autopf}\{#MyAppName}
+DisableDirPage=no
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
+CloseApplications=yes
 WizardStyle=modern
 Compression=lzma2
 SolidCompression=yes
 OutputDir={#MyOutputDir}
 OutputBaseFilename={#MyAppName}-v{#MyAppVersion}-setup
 SetupIconFile=..\src\SoundDeviceSwitcher.App\assets\icons\default.ico
+UninstallDisplayName={#MyAppName}
 UninstallDisplayIcon={app}\SoundDeviceSwitcher.exe
+UninstallFilesDir={app}\Uninstall
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -53,4 +57,4 @@ Name: "{autoprograms}\{#MyAppName}\Uninstall {#MyAppName}"; Filename: "{uninstal
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\SoundDeviceSwitcher.exe"; Tasks: desktopicon; WorkingDir: "{app}"
 
 [Run]
-Filename: "{app}\SoundDeviceSwitcher.exe"; Description: "Launch {#MyAppName}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\SoundDeviceSwitcher.exe"; Parameters: "--postinstall"; Description: "Launch {#MyAppName}"; WorkingDir: "{app}"; Flags: nowait postinstall runasoriginaluser skipifsilent

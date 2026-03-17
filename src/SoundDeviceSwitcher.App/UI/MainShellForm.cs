@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using System.Drawing;
+using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 using SoundDeviceSwitcher.App.Audio;
 using SoundDeviceSwitcher.App.Configuration;
 using SoundDeviceSwitcher.App.Diagnostics;
@@ -82,6 +84,8 @@ internal sealed class MainShellForm : Form
     private readonly EventWaitHandle _restoreEvent;
     private readonly RegisteredWaitHandle _restoreWaitRegistration;
     private readonly bool _launchedFromStartup;
+    private readonly bool _launchedFromPostInstall;
+    private readonly DateTime _postInstallStartedAtUtc;
     private ThemePalette _activePalette = ThemeManager.ResolvePalette(AppThemeMode.System);
     private UpdateReleaseInfo? _availableUpdate;
     private PageKind _currentPage = PageKind.Main;
@@ -95,17 +99,23 @@ internal sealed class MainShellForm : Form
     private bool _updateDialogShown;
     private bool _allowFormVisibility;
     private bool _hotkeySelectionChangedWhileDroppedDown;
+    private bool _initialStateLoaded;
+    private bool _postInstallCloseGuardPending;
     private TableLayoutPanel? _shellLayout;
 
-    public MainShellForm(AppServices services, bool launchedFromStartup = false)
+    public MainShellForm(AppServices services, bool launchedFromStartup = false, bool launchedFromPostInstall = false)
     {
         _services = services;
         _trayNotifications = new TrayNotificationService(_services.Localizer.Get("AppName"));
         _launchedFromStartup = launchedFromStartup;
+        _launchedFromPostInstall = launchedFromPostInstall;
+        _postInstallStartedAtUtc = DateTime.UtcNow;
+        _postInstallCloseGuardPending = launchedFromPostInstall;
 
         SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint, true);
         DoubleBuffered = true;
-        ShowInTaskbar = false;
+        _allowFormVisibility = launchedFromPostInstall;
+        ShowInTaskbar = launchedFromPostInstall;
         StartPosition = FormStartPosition.CenterScreen;
         MinimumSize = new Size(920, 620);
         ClientSize = new Size(980, 660);
@@ -368,7 +378,6 @@ internal sealed class MainShellForm : Form
         SetSidebarVisible(false);
         SetStatus(_services.Localizer.Get("InitialStatus"));
 
-        Load += (_, _) => SafeLoadInitialState();
         FormClosing += (_, eventArgs) => HandleFormClosing(eventArgs);
     }
 
@@ -390,6 +399,19 @@ internal sealed class MainShellForm : Form
         }
 
         base.Dispose(disposing);
+    }
+
+    protected override void OnHandleCreated(EventArgs eventArgs)
+    {
+        base.OnHandleCreated(eventArgs);
+
+        if (_initialStateLoaded || IsDisposed)
+        {
+            return;
+        }
+
+        _initialStateLoaded = true;
+        BeginInvoke(new Action(SafeLoadInitialState));
     }
 
     protected override void SetVisibleCore(bool value)
@@ -1053,6 +1075,11 @@ internal sealed class MainShellForm : Form
             {
                 BeginInvoke(new Action(RevealWindow));
             }
+
+            if (_launchedFromPostInstall)
+            {
+                BeginInvoke(new Action(EnsureVisibleAfterPostInstall));
+            }
         }
         catch (Exception ex)
         {
@@ -1369,6 +1396,13 @@ internal sealed class MainShellForm : Form
 
     private void HandleFormClosing(FormClosingEventArgs eventArgs)
     {
+        if (ShouldSuppressPostInstallClose(eventArgs))
+        {
+            eventArgs.Cancel = true;
+            BeginInvoke(new Action(EnsureVisibleAfterPostInstall));
+            return;
+        }
+
         if (_allowClose || _isHiddenToTray)
         {
             if (_allowClose)
@@ -1394,6 +1428,31 @@ internal sealed class MainShellForm : Form
         PrepareForHiddenState();
         eventArgs.Cancel = true;
         HideToTray(showNotification: true);
+    }
+
+    private bool ShouldSuppressPostInstallClose(FormClosingEventArgs eventArgs)
+    {
+        if (!_postInstallCloseGuardPending ||
+            !_launchedFromPostInstall ||
+            _allowClose ||
+            _isHiddenToTray)
+        {
+            return false;
+        }
+
+        if (eventArgs.CloseReason is CloseReason.ApplicationExitCall or CloseReason.WindowsShutDown or CloseReason.TaskManagerClosing)
+        {
+            return false;
+        }
+
+        if (DateTime.UtcNow - _postInstallStartedAtUtc > TimeSpan.FromSeconds(5))
+        {
+            return false;
+        }
+
+        _postInstallCloseGuardPending = false;
+        AppLogger.LogInfo($"Suppressed post-install close request. Reason={eventArgs.CloseReason}.");
+        return true;
     }
 
     private void HideToTray(bool showNotification)
@@ -1470,11 +1529,45 @@ internal sealed class MainShellForm : Form
 
             BringToFront();
             Activate();
+            ForceForeground();
         }
         finally
         {
             ResumeLayout(performLayout: true);
         }
+    }
+
+    private async void EnsureVisibleAfterPostInstall()
+    {
+        for (var attempt = 0; attempt < 3; attempt++)
+        {
+            if (IsDisposed)
+            {
+                return;
+            }
+
+            _startHiddenToTrayRequested = false;
+            _isHiddenToTray = false;
+            RevealWindow();
+
+            if (attempt < 2)
+            {
+                await Task.Delay(500);
+            }
+        }
+    }
+
+    private void ForceForeground()
+    {
+        if (!IsHandleCreated)
+        {
+            return;
+        }
+
+        ShowWindow(Handle, SwRestore);
+        SetForegroundWindow(Handle);
+        TopMost = true;
+        TopMost = false;
     }
 
     private void PrepareForHiddenState()
@@ -1799,6 +1892,16 @@ internal sealed class MainShellForm : Form
             new LanguageChoice(AppLanguage.Korean, "\uD55C\uAD6D\uC5B4")
         ];
     }
+
+    private const int SwRestore = 9;
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetForegroundWindow(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
     private static List<KeyOption> BuildKeyOptions()
     {

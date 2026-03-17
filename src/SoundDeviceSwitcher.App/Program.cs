@@ -39,15 +39,16 @@ internal static class Program
             return;
         }
 
+        var launchedFromPostInstall = args.Any(arg => arg.Equals("--postinstall", StringComparison.OrdinalIgnoreCase));
         using var mainMutex = MainInstanceManager.CreateMutex(out var createdNew);
         if (!createdNew)
         {
-            MainInstanceManager.SignalExistingInstance();
+            MainInstanceManager.SignalExistingInstance(launchedFromPostInstall ? 12 : 1, launchedFromPostInstall ? 500 : 0);
             return;
         }
 
         var launchedFromStartup = args.Any(arg => arg.Equals("--startup", StringComparison.OrdinalIgnoreCase));
-        Application.Run(new MainShellForm(services, launchedFromStartup));
+        Application.Run(new MainShellForm(services, launchedFromStartup, launchedFromPostInstall));
     }
 
     private static void RunToggleMode(AppServices services)

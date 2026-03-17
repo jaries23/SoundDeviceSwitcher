@@ -17,15 +17,25 @@ internal static class MainInstanceManager
         return new EventWaitHandle(false, EventResetMode.AutoReset, RestoreEventName);
     }
 
-    public static void SignalExistingInstance()
+    public static void SignalExistingInstance(int attempts = 1, int delayMilliseconds = 0)
     {
-        try
+        attempts = Math.Max(1, attempts);
+
+        for (var attempt = 0; attempt < attempts; attempt++)
         {
-            using var restoreEvent = EventWaitHandle.OpenExisting(RestoreEventName);
-            restoreEvent.Set();
-        }
-        catch (WaitHandleCannotBeOpenedException)
-        {
+            try
+            {
+                using var restoreEvent = EventWaitHandle.OpenExisting(RestoreEventName);
+                restoreEvent.Set();
+            }
+            catch (WaitHandleCannotBeOpenedException)
+            {
+            }
+
+            if (attempt < attempts - 1 && delayMilliseconds > 0)
+            {
+                Thread.Sleep(delayMilliseconds);
+            }
         }
     }
 }
