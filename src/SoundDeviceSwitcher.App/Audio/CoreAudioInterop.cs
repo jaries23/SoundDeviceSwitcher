@@ -29,10 +29,10 @@ internal interface IMMDeviceEnumerator
     int GetDevice([MarshalAs(UnmanagedType.LPWStr)] string deviceId, out IMMDevice device);
 
     [PreserveSig]
-    int RegisterEndpointNotificationCallback(IntPtr client);
+    int RegisterEndpointNotificationCallback([MarshalAs(UnmanagedType.Interface)] IMMNotificationClient client);
 
     [PreserveSig]
-    int UnregisterEndpointNotificationCallback(IntPtr client);
+    int UnregisterEndpointNotificationCallback([MarshalAs(UnmanagedType.Interface)] IMMNotificationClient client);
 }
 
 [ComImport]
@@ -63,6 +63,15 @@ internal interface IMMDevice
 
     [PreserveSig]
     int GetState(out DeviceState state);
+}
+
+[ComImport]
+[Guid("1BE09788-6894-4089-8586-9A2A6C265AC5")]
+[InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+internal interface IMMEndpoint
+{
+    [PreserveSig]
+    int GetDataFlow(out EDataFlow dataFlow);
 }
 
 [ComImport]
@@ -126,6 +135,27 @@ internal interface IPolicyConfig
 
     [PreserveSig]
     int SetEndpointVisibility([MarshalAs(UnmanagedType.LPWStr)] string deviceId, int visible);
+}
+
+[ComImport]
+[Guid("7991EEC9-7E89-4D85-8390-6C703CEC60C0")]
+[InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+internal interface IMMNotificationClient
+{
+    [PreserveSig]
+    int OnDeviceStateChanged([MarshalAs(UnmanagedType.LPWStr)] string deviceId, DeviceState newState);
+
+    [PreserveSig]
+    int OnDeviceAdded([MarshalAs(UnmanagedType.LPWStr)] string deviceId);
+
+    [PreserveSig]
+    int OnDeviceRemoved([MarshalAs(UnmanagedType.LPWStr)] string deviceId);
+
+    [PreserveSig]
+    int OnDefaultDeviceChanged(EDataFlow flow, ERole role, [MarshalAs(UnmanagedType.LPWStr)] string defaultDeviceId);
+
+    [PreserveSig]
+    int OnPropertyValueChanged([MarshalAs(UnmanagedType.LPWStr)] string deviceId, PropertyKey key);
 }
 
 internal enum EDataFlow

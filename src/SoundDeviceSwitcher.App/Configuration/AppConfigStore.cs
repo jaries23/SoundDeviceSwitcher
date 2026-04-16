@@ -1,6 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Windows.Forms;
 using SoundDeviceSwitcher.App.Localization;
+using SoundDeviceSwitcher.App.UI;
 
 namespace SoundDeviceSwitcher.App.Configuration;
 
@@ -60,6 +62,43 @@ public sealed class AppConfigStore
             return false;
         }
 
+        config.Profiles ??= [];
+        config.OverlayHotkey ??= new HotkeySettings
+        {
+            Alt = true,
+            Key = Keys.V
+        };
+        config.RecentSwitchUndoHotkey ??= new HotkeySettings
+        {
+            Control = true,
+            Key = Keys.Z
+        };
+        config.OverlayHeightPercent = Math.Clamp(config.OverlayHeightPercent, 12, 35);
+        if (!Enum.IsDefined(config.OverlayAnchor))
+        {
+            config.OverlayAnchor = ProfileOverlayAnchor.BottomCenter;
+        }
+
+        if (!Enum.IsDefined(config.OverlayLayoutOrientation))
+        {
+            config.OverlayLayoutOrientation = ProfileOverlayLayoutOrientation.Horizontal;
+        }
+        config.NotificationIconFileName = NotificationIconCatalog.NormalizeFileName(
+            string.IsNullOrWhiteSpace(config.NotificationIconFileName)
+                ? !string.IsNullOrWhiteSpace(config.PrimaryIconFileName)
+                    ? config.PrimaryIconFileName
+                    : config.SecondaryIconFileName
+                : config.NotificationIconFileName);
+        config.PrimaryIconFileName = config.NotificationIconFileName;
+        config.SecondaryIconFileName = config.NotificationIconFileName;
+        foreach (var profile in config.Profiles)
+        {
+            profile.IconFileName = NotificationIconCatalog.NormalizeFileName(
+                string.IsNullOrWhiteSpace(profile.IconFileName)
+                    ? AppConfig.DefaultIconFileName
+                    : profile.IconFileName);
+        }
+
         _localizer.SetLanguage(config.Language);
 
         if (!Validate(config, out errorMessage))
@@ -88,11 +127,29 @@ public sealed class AppConfigStore
             return false;
         }
 
-        if (config.Hotkey.Enabled &&
-            !config.Hotkey.Control &&
-            !config.Hotkey.Alt &&
-            !config.Hotkey.Shift &&
-            !config.Hotkey.WindowsKey)
+        if (!ValidateHotkey(config.Hotkey, out errorMessage) ||
+            !ValidateHotkey(config.OverlayHotkey, out errorMessage) ||
+            !ValidateHotkey(config.RecentSwitchUndoHotkey, out errorMessage))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private bool ValidateHotkey(HotkeySettings hotkey, out string? errorMessage)
+    {
+        errorMessage = null;
+
+        if (!hotkey.Enabled)
+        {
+            return true;
+        }
+
+        if (!hotkey.Control &&
+            !hotkey.Alt &&
+            !hotkey.Shift &&
+            !hotkey.WindowsKey)
         {
             errorMessage = _localizer.Get("ErrorEnableModifier");
             return false;

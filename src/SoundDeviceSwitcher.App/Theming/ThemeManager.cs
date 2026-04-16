@@ -73,7 +73,9 @@ internal static class ThemeManager
                 flowLayoutPanel.ForeColor = palette.Text;
                 break;
             case Panel panel:
-                panel.BackColor = ResolveContainerBackColor(panel, palette);
+                panel.BackColor = string.Equals(panel.Tag as string, "divider", StringComparison.Ordinal)
+                    ? palette.Border
+                    : ResolveContainerBackColor(panel, palette);
                 panel.ForeColor = palette.Text;
                 break;
             case Label label:
@@ -85,22 +87,51 @@ internal static class ThemeManager
                 checkBox.ForeColor = palette.Text;
                 break;
             case PillRadioButton pillRadioButton:
-                var isNavigation = string.Equals(pillRadioButton.Tag as string, "nav", StringComparison.Ordinal);
+                var tag = pillRadioButton.Tag as string;
+                var isNavigation = string.Equals(tag, "nav", StringComparison.Ordinal);
+                var isSettingsNavigation = string.Equals(tag, "settings-nav", StringComparison.Ordinal);
+                var defaultSurface = isNavigation
+                    ? palette.SidebarSurface
+                    : isSettingsNavigation
+                        ? palette.Surface
+                        : palette.MutedSurface;
+                var hoverSurface = isSettingsNavigation
+                    ? palette.AccentSurface
+                    : palette.MutedSurface;
                 pillRadioButton.BackColor = pillRadioButton.Checked
                     ? palette.Accent
-                    : isNavigation ? palette.SidebarSurface : palette.MutedSurface;
+                    : defaultSurface;
                 pillRadioButton.ForeColor = pillRadioButton.Checked ? palette.AccentText : palette.Text;
                 pillRadioButton.FlatAppearance.BorderColor = pillRadioButton.Checked
                     ? palette.Accent
-                    : isNavigation ? palette.Border : palette.Border;
+                    : palette.Border;
                 pillRadioButton.FlatAppearance.CheckedBackColor = palette.Accent;
-                pillRadioButton.FlatAppearance.MouseDownBackColor = pillRadioButton.Checked ? palette.Accent : palette.MutedSurface;
-                pillRadioButton.FlatAppearance.MouseOverBackColor = pillRadioButton.Checked ? palette.Accent : palette.MutedSurface;
+                pillRadioButton.FlatAppearance.MouseDownBackColor = pillRadioButton.Checked ? palette.Accent : hoverSurface;
+                pillRadioButton.FlatAppearance.MouseOverBackColor = pillRadioButton.Checked ? palette.Accent : hoverSurface;
+                break;
+            case RadioButton radioButton:
+                radioButton.BackColor = radioButton.Parent?.BackColor ?? palette.Surface;
+                radioButton.ForeColor = palette.Text;
                 break;
             case ComboBox comboBox:
                 comboBox.BackColor = palette.InputBackground;
                 comboBox.ForeColor = palette.InputText;
                 comboBox.FlatStyle = FlatStyle.Flat;
+                break;
+            case TextBox textBox:
+                textBox.BackColor = palette.InputBackground;
+                textBox.ForeColor = palette.InputText;
+                textBox.BorderStyle = BorderStyle.FixedSingle;
+                break;
+            case NumericUpDown numericUpDown:
+                numericUpDown.BackColor = palette.InputBackground;
+                numericUpDown.ForeColor = palette.InputText;
+                numericUpDown.BorderStyle = BorderStyle.FixedSingle;
+                break;
+            case ListBox listBox:
+                listBox.BackColor = palette.InputBackground;
+                listBox.ForeColor = palette.InputText;
+                listBox.BorderStyle = BorderStyle.FixedSingle;
                 break;
             case PictureBox pictureBox:
                 pictureBox.BackColor = palette.InputBackground;

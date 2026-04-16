@@ -5,7 +5,7 @@ namespace SoundDeviceSwitcher.App.UI.Controls;
 
 internal sealed class PillRadioButton : RadioButton
 {
-    private int _cornerRadius = 12;
+    private int _cornerRadius = 0;
 
     public PillRadioButton()
     {
@@ -20,7 +20,7 @@ internal sealed class PillRadioButton : RadioButton
 
     [Browsable(true)]
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
-    [DefaultValue(12)]
+    [DefaultValue(0)]
     public int CornerRadius
     {
         get => _cornerRadius;

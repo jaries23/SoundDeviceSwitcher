@@ -94,17 +94,12 @@ internal static class NotificationIconCatalog
             return GetWarningIconPath();
         }
 
-        if (string.Equals(result.SwitchedDeviceId, config.PrimaryDevice.Id, StringComparison.OrdinalIgnoreCase))
-        {
-            return ResolvePath(config.PrimaryIconFileName);
-        }
-
-        if (string.Equals(result.SwitchedDeviceId, config.SecondaryDevice.Id, StringComparison.OrdinalIgnoreCase))
-        {
-            return ResolvePath(config.SecondaryIconFileName);
-        }
-
-        return null;
+        var iconFileName = string.IsNullOrWhiteSpace(config.NotificationIconFileName)
+            ? !string.IsNullOrWhiteSpace(config.PrimaryIconFileName)
+                ? config.PrimaryIconFileName
+                : config.SecondaryIconFileName
+            : config.NotificationIconFileName;
+        return ResolvePath(iconFileName);
     }
 
     public static Image? LoadImage(string? path)

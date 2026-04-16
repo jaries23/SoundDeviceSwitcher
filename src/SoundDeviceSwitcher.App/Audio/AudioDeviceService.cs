@@ -6,6 +6,7 @@ namespace SoundDeviceSwitcher.App.Audio;
 
 public sealed class AudioDeviceService
 {
+    private const DeviceState ProfileSelectableDeviceStates = DeviceState.Active | DeviceState.Unplugged;
     private readonly LocalizationService _localizer;
 
     public AudioDeviceService(LocalizationService localizer)
@@ -15,13 +16,53 @@ public sealed class AudioDeviceService
 
     public IReadOnlyList<AudioDeviceInfo> GetPlaybackDevices()
     {
+        return GetDevices(EDataFlow.Render, DeviceState.Active);
+    }
+
+    public IReadOnlyList<AudioDeviceInfo> GetRecordingDevices()
+    {
+        return GetDevices(EDataFlow.Capture, DeviceState.Active);
+    }
+
+    public IReadOnlyList<AudioDeviceInfo> GetSelectablePlaybackDevices()
+    {
+        return GetDevices(EDataFlow.Render, ProfileSelectableDeviceStates);
+    }
+
+    public IReadOnlyList<AudioDeviceInfo> GetSelectableRecordingDevices()
+    {
+        return GetDevices(EDataFlow.Capture, ProfileSelectableDeviceStates);
+    }
+
+    public AudioDeviceInfo? ResolveActivePlaybackDevice(DeviceSelection selection, out bool resolvedByName)
+    {
+        return ResolveDevice(selection, EDataFlow.Render, DeviceState.Active, out resolvedByName);
+    }
+
+    public AudioDeviceInfo? ResolveActiveRecordingDevice(DeviceSelection selection, out bool resolvedByName)
+    {
+        return ResolveDevice(selection, EDataFlow.Capture, DeviceState.Active, out resolvedByName);
+    }
+
+    public AudioDeviceInfo? ResolveSelectablePlaybackDevice(DeviceSelection selection, out bool resolvedByName)
+    {
+        return ResolveDevice(selection, EDataFlow.Render, ProfileSelectableDeviceStates, out resolvedByName);
+    }
+
+    public AudioDeviceInfo? ResolveSelectableRecordingDevice(DeviceSelection selection, out bool resolvedByName)
+    {
+        return ResolveDevice(selection, EDataFlow.Capture, ProfileSelectableDeviceStates, out resolvedByName);
+    }
+
+    private IReadOnlyList<AudioDeviceInfo> GetDevices(EDataFlow dataFlow, DeviceState stateMask)
+    {
         IMMDeviceEnumerator? enumerator = null;
         IMMDeviceCollection? collection = null;
 
         try
         {
             enumerator = (IMMDeviceEnumerator)(object)new MMDeviceEnumeratorComObject();
-            ThrowOnError(enumerator.EnumAudioEndpoints(EDataFlow.Render, DeviceState.Active, out collection));
+            ThrowOnError(enumerator.EnumAudioEndpoints(dataFlow, stateMask, out collection));
             ThrowOnError(collection.GetCount(out var count));
 
             var devices = new List<AudioDeviceInfo>((int)count);
@@ -58,13 +99,151 @@ public sealed class AudioDeviceService
 
     public AudioDeviceInfo? GetDefaultPlaybackDevice()
     {
+        return GetDefaultRenderDevice(ERole.Console);
+    }
+
+    public AudioDeviceInfo? GetDefaultCommunicationDevice()
+    {
+        return GetDefaultRenderDevice(ERole.Communications);
+    }
+
+    public AudioDeviceInfo? GetDefaultRecordingDevice()
+    {
+        return GetDefaultCaptureDevice(ERole.Console);
+    }
+
+    public AudioDeviceState CaptureCurrentState()
+    {
+        return new AudioDeviceState(
+            CreateEndpointState(GetDefaultPlaybackDevice()),
+            CreateEndpointState(GetDefaultRecordingDevice()),
+            CreateEndpointState(GetDefaultCommunicationDevice()));
+    }
+
+    public bool IsPlaybackDevice(string deviceId)
+    {
+        if (string.IsNullOrWhiteSpace(deviceId))
+        {
+            return false;
+        }
+
+        try
+        {
+            return GetPlaybackDevices().Any(device => string.Equals(device.Id, deviceId, StringComparison.OrdinalIgnoreCase));
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public bool IsRecordingDevice(string deviceId)
+    {
+        if (string.IsNullOrWhiteSpace(deviceId))
+        {
+            return false;
+        }
+
+        try
+        {
+            return GetRecordingDevices().Any(device => string.Equals(device.Id, deviceId, StringComparison.OrdinalIgnoreCase));
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private AudioDeviceInfo? ResolveDevice(
+        DeviceSelection selection,
+        EDataFlow dataFlow,
+        DeviceState stateMask,
+        out bool resolvedByName)
+    {
+        resolvedByName = false;
+
+        if (string.IsNullOrWhiteSpace(selection.Id))
+        {
+            return null;
+        }
+
+        var candidateDevices = GetDevices(dataFlow, stateMask);
+        var idMatch = candidateDevices.FirstOrDefault(
+            device => string.Equals(device.Id, selection.Id, StringComparison.OrdinalIgnoreCase));
+        if (idMatch is not null)
+        {
+            return idMatch;
+        }
+
+        if (string.IsNullOrWhiteSpace(selection.Name))
+        {
+            return null;
+        }
+
+        var nameMatches = candidateDevices
+            .Where(device => DeviceNamesMatch(device.Name, selection.Name))
+            .ToList();
+
+        if (nameMatches.Count == 0)
+        {
+            nameMatches = candidateDevices
+                .Where(device => DeviceNamesMatch(device.DisplayName, selection.Name))
+                .ToList();
+        }
+
+        if (nameMatches.Count != 1)
+        {
+            return null;
+        }
+
+        resolvedByName = true;
+        return nameMatches[0];
+    }
+
+    public void SetDefaultCommunicationDevice(string deviceId)
+    {
+        SetDefaultRenderDevice(deviceId, ERole.Communications);
+    }
+
+    public void SetDefaultPlaybackDevice(string deviceId)
+    {
+        SetDefaultRenderDevice(deviceId, ERole.Console, ERole.Multimedia);
+    }
+
+    public void SetDefaultRecordingDevice(string deviceId)
+    {
+        SetDefaultCaptureDevice(deviceId, ERole.Console, ERole.Multimedia);
+    }
+
+    public void SetDefaultPlaybackAndCommunicationDevice(string deviceId)
+    {
+        SetDefaultRenderDevice(deviceId, ERole.Console, ERole.Multimedia, ERole.Communications);
+    }
+
+    public void SetDefaultRecordingAndCommunicationDevice(string deviceId)
+    {
+        SetDefaultCaptureDevice(deviceId, ERole.Console, ERole.Multimedia, ERole.Communications);
+    }
+
+    private AudioDeviceInfo? GetDefaultRenderDevice(ERole role)
+    {
+        return GetDefaultDevice(EDataFlow.Render, role);
+    }
+
+    private AudioDeviceInfo? GetDefaultCaptureDevice(ERole role)
+    {
+        return GetDefaultDevice(EDataFlow.Capture, role);
+    }
+
+    private AudioDeviceInfo? GetDefaultDevice(EDataFlow dataFlow, ERole role)
+    {
         IMMDeviceEnumerator? enumerator = null;
         IMMDevice? device = null;
 
         try
         {
             enumerator = (IMMDeviceEnumerator)(object)new MMDeviceEnumeratorComObject();
-            ThrowOnError(enumerator.GetDefaultAudioEndpoint(EDataFlow.Render, ERole.Console, out device));
+            ThrowOnError(enumerator.GetDefaultAudioEndpoint(dataFlow, role, out device));
             var deviceId = GetDeviceId(device);
             var friendlyName = GetDeviceFriendlyName(device);
             return new AudioDeviceInfo(deviceId, friendlyName, friendlyName);
@@ -119,16 +298,81 @@ public sealed class AudioDeviceService
         }
     }
 
-    private void SetDefaultPlaybackAndCommunicationDevice(string deviceId)
+    public AudioDeviceStateApplyResult ApplyState(AudioDeviceState state)
+    {
+        var missingDevices = new List<string>();
+        if (state.PlaybackDevice is not null && !IsPlaybackDevice(state.PlaybackDevice.DeviceId))
+        {
+            missingDevices.Add(state.PlaybackDevice.DisplayName);
+        }
+
+        if (state.RecordingDevice is not null && !IsRecordingDevice(state.RecordingDevice.DeviceId))
+        {
+            missingDevices.Add(state.RecordingDevice.DisplayName);
+        }
+
+        if (state.CommunicationDevice is not null && !IsPlaybackDevice(state.CommunicationDevice.DeviceId))
+        {
+            missingDevices.Add(state.CommunicationDevice.DisplayName);
+        }
+
+        if (missingDevices.Count > 0)
+        {
+            return AudioDeviceStateApplyResult.Fail(
+                _localizer.Format("ErrorRecentSwitchUndoMissingDevices", string.Join(", ", missingDevices)));
+        }
+
+        try
+        {
+            var currentState = CaptureCurrentState();
+            if (!AudioDeviceState.IsSameDevice(currentState.PlaybackDevice, state.PlaybackDevice) &&
+                state.PlaybackDevice is not null)
+            {
+                SetDefaultPlaybackDevice(state.PlaybackDevice.DeviceId);
+            }
+
+            if (!AudioDeviceState.IsSameDevice(currentState.RecordingDevice, state.RecordingDevice) &&
+                state.RecordingDevice is not null)
+            {
+                SetDefaultRecordingDevice(state.RecordingDevice.DeviceId);
+            }
+
+            if (!AudioDeviceState.IsSameDevice(currentState.CommunicationDevice, state.CommunicationDevice) &&
+                state.CommunicationDevice is not null)
+            {
+                SetDefaultCommunicationDevice(state.CommunicationDevice.DeviceId);
+            }
+
+            return AudioDeviceStateApplyResult.Ok(_localizer.Get("StatusRecentSwitchUndoApplied"));
+        }
+        catch (Exception ex)
+        {
+            return AudioDeviceStateApplyResult.Fail(
+                _localizer.Format("ErrorRecentSwitchUndoFailed", ex.Message));
+        }
+    }
+
+    private static void SetDefaultRenderDevice(string deviceId, params ERole[] roles)
+    {
+        SetDefaultDevice(deviceId, roles);
+    }
+
+    private static void SetDefaultCaptureDevice(string deviceId, params ERole[] roles)
+    {
+        SetDefaultDevice(deviceId, roles);
+    }
+
+    private static void SetDefaultDevice(string deviceId, params ERole[] roles)
     {
         IPolicyConfig? policyConfig = null;
 
         try
         {
             policyConfig = (IPolicyConfig)(object)new PolicyConfigClientComObject();
-            ThrowOnError(policyConfig.SetDefaultEndpoint(deviceId, ERole.Console));
-            ThrowOnError(policyConfig.SetDefaultEndpoint(deviceId, ERole.Multimedia));
-            ThrowOnError(policyConfig.SetDefaultEndpoint(deviceId, ERole.Communications));
+            foreach (var role in roles)
+            {
+                ThrowOnError(policyConfig.SetDefaultEndpoint(deviceId, role));
+            }
         }
         finally
         {
@@ -156,6 +400,11 @@ public sealed class AudioDeviceService
         }
 
         return resolved;
+    }
+
+    private static bool DeviceNamesMatch(string left, string right)
+    {
+        return string.Equals(left.Trim(), right.Trim(), StringComparison.OrdinalIgnoreCase);
     }
 
     private static string GetDeviceId(IMMDevice device)
@@ -199,5 +448,15 @@ public sealed class AudioDeviceService
         {
             Marshal.ReleaseComObject(comObject);
         }
+    }
+
+    private static AudioEndpointState? CreateEndpointState(AudioDeviceInfo? device)
+    {
+        if (device is null)
+        {
+            return null;
+        }
+
+        return new AudioEndpointState(device.Id, device.Name);
     }
 }

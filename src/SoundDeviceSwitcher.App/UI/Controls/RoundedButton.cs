@@ -5,7 +5,7 @@ namespace SoundDeviceSwitcher.App.UI.Controls;
 
 internal class RoundedButton : Button
 {
-    private int _cornerRadius = 12;
+    private int _cornerRadius = 0;
 
     public RoundedButton()
     {
@@ -20,7 +20,7 @@ internal class RoundedButton : Button
 
     [Browsable(true)]
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
-    [DefaultValue(12)]
+    [DefaultValue(0)]
     public int CornerRadius
     {
         get => _cornerRadius;

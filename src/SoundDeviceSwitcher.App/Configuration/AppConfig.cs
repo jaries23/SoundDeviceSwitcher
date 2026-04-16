@@ -20,13 +20,41 @@ public sealed class AppConfig
 
     public bool EnableUpdateNotifications { get; set; } = true;
 
+    public bool SyncCommunicationDeviceWithPlayback { get; set; }
+
+    public bool AutoSwitchToNewPlaybackDevice { get; set; }
+
+    public bool EnableProfiles { get; set; } = true;
+
+    public HotkeySettings OverlayHotkey { get; set; } = new()
+    {
+        Alt = true,
+        Key = Keys.V
+    };
+
+    public HotkeySettings RecentSwitchUndoHotkey { get; set; } = new()
+    {
+        Control = true,
+        Key = Keys.Z
+    };
+
+    public int OverlayHeightPercent { get; set; } = 20;
+
+    public ProfileOverlayAnchor OverlayAnchor { get; set; } = ProfileOverlayAnchor.BottomCenter;
+
+    public ProfileOverlayLayoutOrientation OverlayLayoutOrientation { get; set; } = ProfileOverlayLayoutOrientation.Horizontal;
+
     public DeviceSelection PrimaryDevice { get; set; } = new();
 
     public DeviceSelection SecondaryDevice { get; set; } = new();
 
+    public string NotificationIconFileName { get; set; } = DefaultIconFileName;
+
     public string PrimaryIconFileName { get; set; } = DefaultIconFileName;
 
     public string SecondaryIconFileName { get; set; } = DefaultIconFileName;
+
+    public List<ProcessAudioProfile> Profiles { get; set; } = [];
 
     public HotkeySettings Hotkey { get; set; } = new();
 }
@@ -51,4 +79,23 @@ public sealed class HotkeySettings
     public bool WindowsKey { get; set; }
 
     public Keys Key { get; set; } = Keys.F10;
+}
+
+public enum ProfileOverlayAnchor
+{
+    TopLeft,
+    TopCenter,
+    TopRight,
+    MiddleLeft,
+    Center,
+    MiddleRight,
+    BottomLeft,
+    BottomCenter,
+    BottomRight
+}
+
+public enum ProfileOverlayLayoutOrientation
+{
+    Horizontal,
+    Vertical
 }

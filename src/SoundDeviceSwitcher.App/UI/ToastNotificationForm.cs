@@ -13,6 +13,8 @@ internal sealed class ToastNotificationForm : Form
     private readonly RoundedPanel _surface;
     private readonly Image? _notificationImage;
     private readonly ThemePalette _palette;
+    private readonly ToolTipIcon _icon;
+    private bool _displayPrepared;
 
     public ToastNotificationForm(
         string title,
@@ -32,6 +34,9 @@ internal sealed class ToastNotificationForm : Form
         Size = new Size(384, 124);
         BackColor = _palette.AppBackground;
         Padding = new Padding(0);
+        Opacity = 0D;
+        Location = new Point(-10000, -10000);
+        _icon = icon;
 
         _surface = new RoundedPanel
         {
@@ -47,6 +52,7 @@ internal sealed class ToastNotificationForm : Form
         Controls.Add(_surface);
         _surface.Controls.Add(BuildContent(title, message, icon));
         ApplyPalette(icon);
+        PrepareForDisplay();
 
         _closeTimer = new System.Windows.Forms.Timer
         {
@@ -54,11 +60,12 @@ internal sealed class ToastNotificationForm : Form
         };
         _closeTimer.Tick += (_, _) => CloseImmediately();
 
+        Load += (_, _) => PrepareForDisplay();
         Shown += (_, _) =>
         {
-            PositionToast();
-            UpdateRoundedRegion();
-            TryPlaySound(icon);
+            PrepareForDisplay();
+            Opacity = 1D;
+            TryPlaySound(_icon);
             _closeTimer.Start();
         };
     }
@@ -89,6 +96,11 @@ internal sealed class ToastNotificationForm : Form
     {
         base.OnSizeChanged(e);
         UpdateRoundedRegion();
+
+        if (!Visible)
+        {
+            PositionToast();
+        }
     }
 
     public void CloseImmediately()
@@ -176,6 +188,28 @@ internal sealed class ToastNotificationForm : Form
         _surface.FillColor = _palette.Surface;
         _surface.BorderColor = ResolveAccentColor(icon);
         _surface.BackColor = _palette.AppBackground;
+    }
+
+    private void PrepareForDisplay()
+    {
+        if (_displayPrepared || Width <= 0 || Height <= 0)
+        {
+            return;
+        }
+
+        SuspendLayout();
+
+        try
+        {
+            PositionToast();
+            UpdateRoundedRegion();
+        }
+        finally
+        {
+            ResumeLayout(performLayout: true);
+        }
+
+        _displayPrepared = true;
     }
 
     private void PositionToast()
