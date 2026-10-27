@@ -8,8 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-10-27
+
+### Added
+
+- **프로그램별 토글 규칙 · 앱별 오디오 라우팅 / Program-specific toggle rules and per-app routing** — 특정 프로그램을 두 출력 장치 사이에서 토글하는 규칙을 만들고, 해당 프로그램의 오디오만 지정한 장치로 보냅니다. 볼륨 믹서 토글을 쓰면 포그라운드로 잡힌 프로그램만 전환됩니다. Create rules that toggle a specific program between two output devices and route only that program's audio to the chosen device; with volume-mixer toggle enabled, only the foreground-matched program is switched.
+- **실행 중인 프로그램 선택 / Running-program picker** — 프로그램을 추가할 때 파일을 탐색하는 대신 현재 실행 중인(창이 있는) 프로그램 목록에서 선택합니다. 토글 규칙과 프로필 모두에 적용됩니다. When adding a program, pick from the list of currently running windowed programs instead of browsing for a file; this applies to both toggle rules and profiles.
+
 ### Changed
 
+- **기본-통신 장치 연동 확장 / Default–communications sync extended** — 기존 재생 기준 통신 장치 연동을 녹음(입력) 장치에도 동일하게 적용하고, 옵션 이름을 "기본-통신 장치 연동"으로 바꿨습니다. The communications-default sync now also aligns the recording (capture) communications default with the current default recording device, and the option was renamed to "default–communications sync."
 - **MainShellForm 분할 리팩터링 / MainShellForm refactor split** — 6,111줄 단일 폼을 책임별 14개 partial 클래스 파일로 분리했습니다(동작 변화 없음). Split the single 6,111-line form into 14 feature-based partial class files with no behavior change.
 
 ## [2.1.0] - 2026-04-16
@@ -55,7 +63,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - 최초 스크립트 기반 릴리스. Initial script-based release.
 
-[Unreleased]: https://github.com/jaries23/SoundDeviceSwitcher/compare/v2.1.0...HEAD
+[Unreleased]: https://github.com/jaries23/SoundDeviceSwitcher/compare/v2.2.0...HEAD
+[2.2.0]: https://github.com/jaries23/SoundDeviceSwitcher/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/jaries23/SoundDeviceSwitcher/compare/v2.0.1...v2.1.0
 [2.0.1]: https://github.com/jaries23/SoundDeviceSwitcher/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/jaries23/SoundDeviceSwitcher/compare/v1.1...v2.0.0
