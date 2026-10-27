@@ -107,6 +107,7 @@ internal sealed partial class MainShellForm
             _audioDeviceNotificationMonitor = new AudioDeviceNotificationMonitor();
             _audioDeviceNotificationMonitor.DefaultAudioDeviceChanged += HandleTrackedDefaultAudioDeviceChanged;
             _audioDeviceNotificationMonitor.DefaultPlaybackDeviceChanged += HandleDefaultPlaybackDeviceChanged;
+            _audioDeviceNotificationMonitor.DefaultRecordingDeviceChanged += HandleDefaultRecordingDeviceChanged;
             _audioDeviceNotificationMonitor.AudioDeviceAdded += HandleAudioDeviceAdded;
             _audioDeviceNotificationMonitor.Start();
         }
@@ -151,6 +152,30 @@ internal sealed partial class MainShellForm
                 }
 
                 SyncCommunicationDeviceWithPlayback(eventArgs.DeviceId, trackChange: false);
+            }));
+        }
+        catch (InvalidOperationException)
+        {
+        }
+    }
+
+    private void HandleDefaultRecordingDeviceChanged(object? sender, DefaultRecordingDeviceChangedEventArgs eventArgs)
+    {
+        if (IsDisposed || !IsHandleCreated)
+        {
+            return;
+        }
+
+        try
+        {
+            BeginInvoke(new Action(() =>
+            {
+                if (ShouldIgnoreObservedAudioDeviceNotifications())
+                {
+                    return;
+                }
+
+                SyncCommunicationDeviceWithRecording(eventArgs.DeviceId, trackChange: false);
             }));
         }
         catch (InvalidOperationException)
@@ -224,6 +249,59 @@ internal sealed partial class MainShellForm
         catch (Exception ex)
         {
             AppLogger.LogException("MainShellForm.SyncCommunicationDeviceWithPlayback", ex);
+        }
+    }
+
+    private void SyncCommunicationDeviceToCurrentRecordingIfEnabled(bool trackChange)
+    {
+        if (!_syncCommunicationDeviceWithPlaybackCheckBox.Checked)
+        {
+            return;
+        }
+
+        var recordingDevice = _services.AudioDeviceService.GetDefaultRecordingDevice();
+        if (recordingDevice is null)
+        {
+            return;
+        }
+
+        SyncCommunicationDeviceWithRecording(recordingDevice.Id, trackChange);
+    }
+
+    private void SyncCommunicationDeviceWithRecording(string recordingDeviceId, bool trackChange)
+    {
+        if (IsDisposed ||
+            _isLoading ||
+            !_syncCommunicationDeviceWithPlaybackCheckBox.Checked ||
+            string.IsNullOrWhiteSpace(recordingDeviceId))
+        {
+            return;
+        }
+
+        try
+        {
+            var communicationDevice = _services.AudioDeviceService.GetDefaultCommunicationRecordingDevice();
+            if (communicationDevice is not null &&
+                string.Equals(communicationDevice.Id, recordingDeviceId, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            if (trackChange)
+            {
+                _ = ExecuteTrackedAudioChange(() =>
+                {
+                    _services.AudioDeviceService.SetDefaultCommunicationRecordingDevice(recordingDeviceId);
+                    return true;
+                });
+                return;
+            }
+
+            _services.AudioDeviceService.SetDefaultCommunicationRecordingDevice(recordingDeviceId);
+        }
+        catch (Exception ex)
+        {
+            AppLogger.LogException("MainShellForm.SyncCommunicationDeviceWithRecording", ex);
         }
     }
 

@@ -63,6 +63,7 @@ public sealed class AppConfigStore
         }
 
         config.Profiles ??= [];
+        config.ToggleRules ??= [];
         config.OverlayHotkey ??= new HotkeySettings
         {
             Alt = true,
@@ -93,10 +94,19 @@ public sealed class AppConfigStore
         config.SecondaryIconFileName = config.NotificationIconFileName;
         foreach (var profile in config.Profiles)
         {
+            profile.PlaybackDevice ??= new DeviceSelection();
+            profile.RecordingDevice ??= new DeviceSelection();
+            profile.Programs ??= [];
+
             profile.IconFileName = NotificationIconCatalog.NormalizeFileName(
                 string.IsNullOrWhiteSpace(profile.IconFileName)
                     ? AppConfig.DefaultIconFileName
                     : profile.IconFileName);
+        }
+
+        foreach (var rule in config.ToggleRules)
+        {
+            NormalizeToggleRule(rule);
         }
 
         _localizer.SetLanguage(config.Language);
@@ -134,7 +144,36 @@ public sealed class AppConfigStore
             return false;
         }
 
+        foreach (var rule in config.ToggleRules)
+        {
+            if (!string.IsNullOrWhiteSpace(rule.PrimaryDevice.Id) &&
+                !string.IsNullOrWhiteSpace(rule.SecondaryDevice.Id) &&
+                string.Equals(
+                    rule.PrimaryDevice.Id,
+                    rule.SecondaryDevice.Id,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                errorMessage = _localizer.Format(
+                    "ErrorToggleRuleDevicesDifferent",
+                    string.IsNullOrWhiteSpace(rule.Name)
+                        ? _localizer.Get("ToggleRuleUnnamed")
+                        : rule.Name);
+                return false;
+            }
+        }
+
         return true;
+    }
+
+    private static void NormalizeToggleRule(ProgramToggleRule rule)
+    {
+        rule.PrimaryDevice ??= new DeviceSelection();
+        rule.SecondaryDevice ??= new DeviceSelection();
+        rule.Programs ??= [];
+        if (!Enum.IsDefined(rule.Target))
+        {
+            rule.Target = ProfileToggleTarget.DefaultDevice;
+        }
     }
 
     private bool ValidateHotkey(HotkeySettings hotkey, out string? errorMessage)

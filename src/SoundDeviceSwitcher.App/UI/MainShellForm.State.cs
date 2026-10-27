@@ -73,6 +73,7 @@ internal sealed partial class MainShellForm
         if (_syncCommunicationDeviceWithPlaybackCheckBox.Checked)
         {
             SyncCommunicationDeviceToCurrentPlaybackIfEnabled(trackChange: true);
+            SyncCommunicationDeviceToCurrentRecordingIfEnabled(trackChange: true);
         }
     }
 
@@ -103,6 +104,7 @@ internal sealed partial class MainShellForm
             LoadInitialState();
             InitializeAudioDeviceNotificationMonitor();
             SyncCommunicationDeviceToCurrentPlaybackIfEnabled(trackChange: false);
+            SyncCommunicationDeviceToCurrentRecordingIfEnabled(trackChange: false);
             EvaluateProcessProfiles();
             InitializeRecentAudioStateTracking();
             BeginUpdateCheck();

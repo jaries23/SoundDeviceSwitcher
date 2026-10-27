@@ -12,6 +12,8 @@ internal sealed class AudioDeviceNotificationMonitor : IDisposable
 
     public event EventHandler<DefaultPlaybackDeviceChangedEventArgs>? DefaultPlaybackDeviceChanged;
 
+    public event EventHandler<DefaultRecordingDeviceChangedEventArgs>? DefaultRecordingDeviceChanged;
+
     public event EventHandler<AudioDeviceAddedEventArgs>? AudioDeviceAdded;
 
     public void Start()
@@ -66,6 +68,11 @@ internal sealed class AudioDeviceNotificationMonitor : IDisposable
         if (flow == EDataFlow.Render && role != ERole.Communications)
         {
             DefaultPlaybackDeviceChanged?.Invoke(this, new DefaultPlaybackDeviceChangedEventArgs(deviceId));
+        }
+
+        if (flow == EDataFlow.Capture && role != ERole.Communications)
+        {
+            DefaultRecordingDeviceChanged?.Invoke(this, new DefaultRecordingDeviceChangedEventArgs(deviceId));
         }
     }
 
@@ -194,6 +201,16 @@ internal sealed class DefaultAudioDeviceChangedEventArgs : EventArgs
 internal sealed class DefaultPlaybackDeviceChangedEventArgs : EventArgs
 {
     public DefaultPlaybackDeviceChangedEventArgs(string deviceId)
+    {
+        DeviceId = deviceId;
+    }
+
+    public string DeviceId { get; }
+}
+
+internal sealed class DefaultRecordingDeviceChangedEventArgs : EventArgs
+{
+    public DefaultRecordingDeviceChangedEventArgs(string deviceId)
     {
         DeviceId = deviceId;
     }

@@ -44,6 +44,12 @@ public sealed class ProcessAudioProfile
     }
 }
 
+public enum ProfileToggleTarget
+{
+    DefaultDevice,
+    ApplicationAudioDevice
+}
+
 public sealed class ProfileProgramTarget
 {
     public string DisplayName { get; set; } = string.Empty;

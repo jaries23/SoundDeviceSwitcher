@@ -112,6 +112,11 @@ public sealed class AudioDeviceService
         return GetDefaultCaptureDevice(ERole.Console);
     }
 
+    public AudioDeviceInfo? GetDefaultCommunicationRecordingDevice()
+    {
+        return GetDefaultCaptureDevice(ERole.Communications);
+    }
+
     public AudioDeviceState CaptureCurrentState()
     {
         return new AudioDeviceState(
@@ -215,6 +220,11 @@ public sealed class AudioDeviceService
         SetDefaultCaptureDevice(deviceId, ERole.Console, ERole.Multimedia);
     }
 
+    public void SetDefaultCommunicationRecordingDevice(string deviceId)
+    {
+        SetDefaultCaptureDevice(deviceId, ERole.Communications);
+    }
+
     public void SetDefaultPlaybackAndCommunicationDevice(string deviceId)
     {
         SetDefaultRenderDevice(deviceId, ERole.Console, ERole.Multimedia, ERole.Communications);
@@ -261,18 +271,30 @@ public sealed class AudioDeviceService
 
     public ToggleResult Toggle(AppConfig config)
     {
+        return Toggle(config.PrimaryDevice, config.SecondaryDevice);
+    }
+
+    public ToggleResult Toggle(DeviceSelection primaryDevice, DeviceSelection secondaryDevice)
+    {
         var devices = GetPlaybackDevices()
             .ToDictionary(device => device.Id, StringComparer.OrdinalIgnoreCase);
 
-        var missingDevices = new List<string>();
-        if (!devices.ContainsKey(config.PrimaryDevice.Id))
+        if (!string.IsNullOrWhiteSpace(primaryDevice.Id) &&
+            !string.IsNullOrWhiteSpace(secondaryDevice.Id) &&
+            string.Equals(primaryDevice.Id, secondaryDevice.Id, StringComparison.OrdinalIgnoreCase))
         {
-            missingDevices.Add(config.PrimaryDevice.Name);
+            return ToggleResult.Fail(_localizer.Get("ErrorPrimarySecondaryDifferent"));
         }
 
-        if (!devices.ContainsKey(config.SecondaryDevice.Id))
+        var missingDevices = new List<string>();
+        if (!devices.ContainsKey(primaryDevice.Id))
         {
-            missingDevices.Add(config.SecondaryDevice.Name);
+            missingDevices.Add(GetDeviceSelectionLabel(primaryDevice, _localizer.Get("DeviceALabel")));
+        }
+
+        if (!devices.ContainsKey(secondaryDevice.Id))
+        {
+            missingDevices.Add(GetDeviceSelectionLabel(secondaryDevice, _localizer.Get("DeviceBLabel")));
         }
 
         if (missingDevices.Count > 0)
@@ -283,9 +305,9 @@ public sealed class AudioDeviceService
 
         var currentDefault = GetDefaultPlaybackDevice();
         var targetDevice = currentDefault is not null &&
-                           string.Equals(currentDefault.Id, config.PrimaryDevice.Id, StringComparison.OrdinalIgnoreCase)
-            ? devices[config.SecondaryDevice.Id]
-            : devices[config.PrimaryDevice.Id];
+                           string.Equals(currentDefault.Id, primaryDevice.Id, StringComparison.OrdinalIgnoreCase)
+            ? devices[secondaryDevice.Id]
+            : devices[primaryDevice.Id];
 
         try
         {
@@ -296,6 +318,132 @@ public sealed class AudioDeviceService
         {
             return ToggleResult.Fail(_localizer.Format("ToggleFailed", ex.Message));
         }
+    }
+
+    public ToggleResult ToggleApplicationPlaybackDevice(
+        int processId,
+        DeviceSelection primaryDevice,
+        DeviceSelection secondaryDevice)
+    {
+        if (processId <= 0)
+        {
+            return ToggleResult.Fail(_localizer.Format("ToggleFailed", _localizer.Get("ErrorForegroundProcessUnavailable")));
+        }
+
+        var devices = GetPlaybackDevices()
+            .ToDictionary(device => device.Id, StringComparer.OrdinalIgnoreCase);
+
+        if (!TryResolveToggleSide(primaryDevice, devices, _localizer.Get("DeviceALabel"), out var primarySide, out var primaryError))
+        {
+            return ToggleResult.Fail(_localizer.Format("ToggleMissingDevices", primaryError));
+        }
+
+        if (!TryResolveToggleSide(secondaryDevice, devices, _localizer.Get("DeviceBLabel"), out var secondarySide, out var secondaryError))
+        {
+            return ToggleResult.Fail(_localizer.Format("ToggleMissingDevices", secondaryError));
+        }
+
+        if (!primarySide.HasDevice && !secondarySide.HasDevice)
+        {
+            return ToggleResult.Fail(_localizer.Get("ToggleNoProfileDevices"));
+        }
+
+        if (primarySide.HasDevice &&
+            secondarySide.HasDevice &&
+            string.Equals(primarySide.Device!.Id, secondarySide.Device!.Id, StringComparison.OrdinalIgnoreCase))
+        {
+            return ToggleResult.Fail(_localizer.Get("ErrorPrimarySecondaryDifferent"));
+        }
+
+        try
+        {
+            using var routingPolicy = AppAudioRoutingPolicy.Activate();
+            var currentRouteDeviceId = routingPolicy.GetPersistedDefaultRenderEndpoint(unchecked((uint)processId));
+            var currentDefaultDevice = GetDefaultPlaybackDevice();
+            var targetSide = IsCurrentApplicationRoutePrimary(primarySide, currentRouteDeviceId, currentDefaultDevice)
+                ? secondarySide
+                : primarySide;
+
+            routingPolicy.SetPersistedDefaultRenderEndpoint(
+                unchecked((uint)processId),
+                targetSide.Device?.Id);
+
+            return targetSide.HasDevice
+                ? ToggleResult.Ok(_localizer.Format("ToggleSwitched", targetSide.Device!.Name), targetSide.Device.Id)
+                : ToggleResult.Ok(_localizer.Get("ToggleSwitchedToSystemDefault"));
+        }
+        catch (Exception ex)
+        {
+            return ToggleResult.Fail(_localizer.Format("ToggleFailed", ex.Message));
+        }
+    }
+
+    private static bool IsCurrentApplicationRoutePrimary(
+        ToggleDeviceSide primarySide,
+        string? currentRouteDeviceId,
+        AudioDeviceInfo? currentDefaultDevice)
+    {
+        if (!primarySide.HasDevice)
+        {
+            return string.IsNullOrWhiteSpace(currentRouteDeviceId);
+        }
+
+        if (!string.IsNullOrWhiteSpace(currentRouteDeviceId))
+        {
+            return string.Equals(currentRouteDeviceId, primarySide.Device!.Id, StringComparison.OrdinalIgnoreCase);
+        }
+
+        return currentDefaultDevice is not null &&
+               string.Equals(currentDefaultDevice.Id, primarySide.Device!.Id, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool TryResolveToggleSide(
+        DeviceSelection selection,
+        IReadOnlyDictionary<string, AudioDeviceInfo> devices,
+        string fallbackLabel,
+        out ToggleDeviceSide side,
+        out string errorMessage)
+    {
+        side = ToggleDeviceSide.SystemDefault;
+        errorMessage = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(selection.Id))
+        {
+            return true;
+        }
+
+        if (!devices.TryGetValue(selection.Id, out var device))
+        {
+            errorMessage = GetDeviceSelectionLabel(selection, fallbackLabel);
+            return false;
+        }
+
+        side = new ToggleDeviceSide(device);
+        return true;
+    }
+
+    private static string GetDeviceSelectionLabel(DeviceSelection selection, string fallback)
+    {
+        if (!string.IsNullOrWhiteSpace(selection.Name))
+        {
+            return selection.Name;
+        }
+
+        return string.IsNullOrWhiteSpace(selection.Id) ? fallback : selection.Id;
+    }
+
+    private readonly struct ToggleDeviceSide
+    {
+        public static ToggleDeviceSide SystemDefault { get; } = new(null);
+
+        public ToggleDeviceSide(AudioDeviceInfo? device)
+        {
+            Device = device;
+        }
+
+        public AudioDeviceInfo? Device { get; }
+
+        public bool HasDevice => Device is not null;
     }
 
     public AudioDeviceStateApplyResult ApplyState(AudioDeviceState state)

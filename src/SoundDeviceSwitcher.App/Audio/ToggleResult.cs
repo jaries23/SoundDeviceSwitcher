@@ -17,5 +17,7 @@ public sealed class ToggleResult
 
     public static ToggleResult Ok(string message, string switchedDeviceId) => new(true, message, switchedDeviceId);
 
+    public static ToggleResult Ok(string message) => new(true, message, null);
+
     public static ToggleResult Fail(string message) => new(false, message, null);
 }

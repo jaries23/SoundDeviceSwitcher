@@ -56,6 +56,8 @@ public sealed class AppConfig
 
     public List<ProcessAudioProfile> Profiles { get; set; } = [];
 
+    public List<ProgramToggleRule> ToggleRules { get; set; } = [];
+
     public HotkeySettings Hotkey { get; set; } = new();
 }
 

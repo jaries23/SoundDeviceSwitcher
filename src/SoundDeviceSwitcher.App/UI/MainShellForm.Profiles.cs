@@ -543,35 +543,20 @@ internal sealed partial class MainShellForm
             return;
         }
 
-        using var dialog = new OpenFileDialog
-        {
-            Filter = "Applications (*.exe)|*.exe",
-            Multiselect = true,
-            Title = _services.Localizer.Get("SelectProgramsDialogTitle")
-        };
-
-        if (dialog.ShowDialog(this) != DialogResult.OK)
+        var pickedPrograms = PickRunningPrograms();
+        if (pickedPrograms.Count == 0)
         {
             return;
         }
 
-        foreach (var fileName in dialog.FileNames)
+        foreach (var program in pickedPrograms)
         {
-            var executableName = Path.GetFileName(fileName);
-            if (profile.Programs.Any(program =>
-                    string.Equals(program.ExecutablePath, fileName, StringComparison.OrdinalIgnoreCase) ||
-                    (string.IsNullOrWhiteSpace(program.ExecutablePath) &&
-                     string.Equals(program.ExecutableName, executableName, StringComparison.OrdinalIgnoreCase))))
+            if (profile.Programs.Any(existing => IsSameProgram(existing, program)))
             {
                 continue;
             }
 
-            profile.Programs.Add(new ProfileProgramTarget
-            {
-                DisplayName = Path.GetFileNameWithoutExtension(fileName),
-                ExecutableName = executableName,
-                ExecutablePath = fileName
-            });
+            profile.Programs.Add(program);
         }
 
         RefreshProfileProgramList(profile);

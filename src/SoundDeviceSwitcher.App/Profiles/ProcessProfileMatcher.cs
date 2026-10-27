@@ -6,6 +6,31 @@ namespace SoundDeviceSwitcher.App.Profiles;
 
 internal sealed class ProcessProfileMatcher
 {
+    public ForegroundToggleRuleMatch? FindForegroundToggleRuleMatch(IEnumerable<ProgramToggleRule> rules)
+    {
+        var orderedRules = rules
+            .Where(IsEligibleToggleRule)
+            .OrderByDescending(rule => rule.Priority)
+            .ToList();
+
+        if (orderedRules.Count == 0)
+        {
+            return null;
+        }
+
+        var foregroundProcess = TryGetForegroundProcess();
+        if (foregroundProcess is null)
+        {
+            return null;
+        }
+
+        var matchedRule = orderedRules.FirstOrDefault(
+            rule => rule.Programs.Any(program => Matches(program, foregroundProcess)));
+        return matchedRule is null
+            ? null
+            : new ForegroundToggleRuleMatch(matchedRule, foregroundProcess.ProcessId);
+    }
+
     public ProcessProfileMatchResult FindForegroundMatch(IEnumerable<ProcessAudioProfile> profiles)
     {
         var orderedProfiles = profiles
@@ -56,6 +81,20 @@ internal sealed class ProcessProfileMatcher
         return profile.Programs.Count > 0 &&
                (!string.IsNullOrWhiteSpace(profile.PlaybackDevice.Id) ||
                 !string.IsNullOrWhiteSpace(profile.RecordingDevice.Id));
+    }
+
+    private static bool IsEligibleToggleRule(ProgramToggleRule rule)
+    {
+        if (!rule.Enabled || rule.Programs.Count == 0)
+        {
+            return false;
+        }
+
+        var hasPrimaryDevice = !string.IsNullOrWhiteSpace(rule.PrimaryDevice.Id);
+        var hasSecondaryDevice = !string.IsNullOrWhiteSpace(rule.SecondaryDevice.Id);
+        return rule.Target == ProfileToggleTarget.ApplicationAudioDevice
+            ? hasPrimaryDevice || hasSecondaryDevice
+            : hasPrimaryDevice && hasSecondaryDevice;
     }
 
     private static HashSet<string> GetRunningProcessNames()
@@ -218,17 +257,31 @@ internal sealed class ProcessProfileMatchResult
     }
 }
 
+internal sealed class ForegroundToggleRuleMatch
+{
+    public ForegroundToggleRuleMatch(ProgramToggleRule rule, int processId)
+    {
+        Rule = rule;
+        ProcessId = processId;
+    }
+
+    public ProgramToggleRule Rule { get; }
+
+    public int ProcessId { get; }
+}
+
 internal sealed class ForegroundProcessInfo
 {
-    private readonly int _processId;
     private string? _executablePath;
     private bool _pathResolved;
 
     public ForegroundProcessInfo(int processId, string executableName)
     {
-        _processId = processId;
+        ProcessId = processId;
         ExecutableName = executableName;
     }
+
+    public int ProcessId { get; }
 
     public string ExecutableName { get; }
 
@@ -241,7 +294,7 @@ internal sealed class ForegroundProcessInfo
 
         try
         {
-            using var process = Process.GetProcessById(_processId);
+            using var process = Process.GetProcessById(ProcessId);
             _executablePath = ProcessProfileMatcher.TryGetExecutablePath(process);
         }
         catch

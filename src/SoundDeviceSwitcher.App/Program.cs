@@ -2,6 +2,7 @@ using SoundDeviceSwitcher.App.Audio;
 using SoundDeviceSwitcher.App.Configuration;
 using SoundDeviceSwitcher.App.Diagnostics;
 using SoundDeviceSwitcher.App.Localization;
+using SoundDeviceSwitcher.App.Profiles;
 using SoundDeviceSwitcher.App.Shell;
 using SoundDeviceSwitcher.App.UI;
 using SoundDeviceSwitcher.App.Updates;
@@ -63,7 +64,17 @@ internal static class Program
             return;
         }
 
-        var result = services.AudioDeviceService.Toggle(config!);
+        var toggleMatch = new ProcessProfileMatcher().FindForegroundToggleRuleMatch(config!.ToggleRules);
+        var result = toggleMatch is null
+            ? services.AudioDeviceService.Toggle(config)
+            : toggleMatch.Rule.Target == ProfileToggleTarget.ApplicationAudioDevice
+                ? services.AudioDeviceService.ToggleApplicationPlaybackDevice(
+                    toggleMatch.ProcessId,
+                    toggleMatch.Rule.PrimaryDevice,
+                    toggleMatch.Rule.SecondaryDevice)
+                : services.AudioDeviceService.Toggle(
+                    toggleMatch.Rule.PrimaryDevice,
+                    toggleMatch.Rule.SecondaryDevice);
         TrayNotificationService.ShowTransient(
             services.Localizer.Get("AppName"),
             result.Message,

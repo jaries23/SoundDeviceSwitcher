@@ -600,41 +600,45 @@ internal sealed partial class MainShellForm
             return;
         }
 
-        using var dialog = new OpenFileDialog
-        {
-            Filter = "Applications (*.exe)|*.exe",
-            Multiselect = true,
-            Title = _services.Localizer.Get("SelectProgramsDialogTitle")
-        };
-
-        if (dialog.ShowDialog(this) != DialogResult.OK)
+        var pickedPrograms = PickRunningPrograms();
+        if (pickedPrograms.Count == 0)
         {
             return;
         }
 
-        foreach (var fileName in dialog.FileNames)
+        foreach (var program in pickedPrograms)
         {
-            var executableName = Path.GetFileName(fileName);
-            if (rule.Programs.Any(program =>
-                    string.Equals(program.ExecutablePath, fileName, StringComparison.OrdinalIgnoreCase) ||
-                    (string.IsNullOrWhiteSpace(program.ExecutablePath) &&
-                     string.Equals(program.ExecutableName, executableName, StringComparison.OrdinalIgnoreCase))))
+            if (rule.Programs.Any(existing => IsSameProgram(existing, program)))
             {
                 continue;
             }
 
-            rule.Programs.Add(new ProfileProgramTarget
-            {
-                DisplayName = Path.GetFileNameWithoutExtension(fileName),
-                ExecutableName = executableName,
-                ExecutablePath = fileName
-            });
+            rule.Programs.Add(program);
         }
 
         RefreshToggleRuleProgramList(rule);
         UpdateToggleRuleProgramButtons();
         RefreshMainProgramToggleList(refreshDeviceChoices: true, selectedRuleId: rule.Id);
         AutoSaveCurrentSelections();
+    }
+
+    private IReadOnlyList<ProfileProgramTarget> PickRunningPrograms()
+    {
+        using var picker = new RunningProgramPickerForm(_services.Localizer, GetSelectedThemeMode());
+        return picker.ShowDialog(this) == DialogResult.OK
+            ? picker.SelectedPrograms
+            : [];
+    }
+
+    private static bool IsSameProgram(ProfileProgramTarget existing, ProfileProgramTarget candidate)
+    {
+        if (!string.IsNullOrWhiteSpace(existing.ExecutablePath) &&
+            !string.IsNullOrWhiteSpace(candidate.ExecutablePath))
+        {
+            return string.Equals(existing.ExecutablePath, candidate.ExecutablePath, StringComparison.OrdinalIgnoreCase);
+        }
+
+        return string.Equals(existing.ExecutableName, candidate.ExecutableName, StringComparison.OrdinalIgnoreCase);
     }
 
     private void RemoveSelectedProgramFromToggleRule()

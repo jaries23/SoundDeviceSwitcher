@@ -311,9 +311,6 @@ internal sealed partial class MainShellForm
                 var clone = profile.Clone();
                 clone.Priority = count - index;
                 clone.Enabled = true;
-                clone.TogglePrimaryDevice = new DeviceSelection();
-                clone.ToggleSecondaryDevice = new DeviceSelection();
-                clone.ToggleTarget = ProfileToggleTarget.DefaultDevice;
                 return clone;
             })
             .ToList();
