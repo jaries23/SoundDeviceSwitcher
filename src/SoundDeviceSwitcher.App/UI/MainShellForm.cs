@@ -885,7 +885,7 @@ internal sealed partial class MainShellForm : Form
             AutoScroll = true,
             Padding = new Padding(0, 10, 0, 0)
         };
-        _settingsContentHost = new Panel
+        _settingsContentHost = new CompositedPanel
         {
             Dock = DockStyle.Top,
             AutoSize = true,

@@ -650,6 +650,23 @@ internal sealed partial class MainShellForm
         settingsShell.Controls.Add(navigationCard, 0, 0);
         settingsShell.Controls.Add(_settingsContentHost, 1, 0);
 
+        // Parent every section card once and keep them all mounted; switching sections
+        // only toggles which one is visible, so no card is re-parented (which would
+        // recreate its window handle and flash a half-rendered frame).
+        foreach (var card in new[]
+        {
+            _settingsGeneralCard,
+            _settingsAutomationCard,
+            _settingsHotkeyCard,
+            _settingsToggleRulesCard,
+            _settingsOverlayCard,
+            _settingsProfilesCard
+        })
+        {
+            card.Visible = false;
+            _settingsContentHost.Controls.Add(card);
+        }
+
         var page = CreatePageLayout();
         page.Controls.Add(settingsShell, 0, 0);
         SetSettingsSection(SettingsSection.General, updateRadioSelection: true);

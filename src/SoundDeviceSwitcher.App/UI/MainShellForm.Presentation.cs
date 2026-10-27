@@ -146,9 +146,46 @@ internal sealed partial class MainShellForm
         _notifyIcon.Text = appName;
     }
 
-    private void ApplyTheme(AppThemeMode themeMode)
+    private const int WmSetRedraw = 0x000B;
+    private const uint RdwInvalidate = 0x0001;
+    private const uint RdwErase = 0x0004;
+    private const uint RdwAllChildren = 0x0080;
+    private const uint RdwUpdateNow = 0x0100;
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
+
+    [DllImport("user32.dll")]
+    private static extern bool RedrawWindow(IntPtr hWnd, IntPtr lprcUpdate, IntPtr hrgnUpdate, uint flags);
+
+    private static void SuspendDrawing(Control? control)
     {
-        _activePalette = ThemeManager.Apply(this, themeMode);
+        if (control is { IsHandleCreated: true })
+        {
+            SendMessage(control.Handle, WmSetRedraw, IntPtr.Zero, IntPtr.Zero);
+        }
+    }
+
+    private static void ResumeDrawing(Control? control)
+    {
+        if (control is { IsHandleCreated: true })
+        {
+            SendMessage(control.Handle, WmSetRedraw, (IntPtr)1, IntPtr.Zero);
+
+            // Repaint the container and all of its children synchronously in a single
+            // pass so the finished page appears at once instead of empty boxes that
+            // fill in afterwards (the "ghosting" seen when redraw resumes).
+            RedrawWindow(
+                control.Handle,
+                IntPtr.Zero,
+                IntPtr.Zero,
+                RdwInvalidate | RdwErase | RdwAllChildren | RdwUpdateNow);
+        }
+    }
+
+    private void ApplyTheme(AppThemeMode themeMode, Control? root = null)
+    {
+        _activePalette = ThemeManager.Apply(root ?? this, themeMode);
         _trayNotifications.SetThemeMode(themeMode);
         _brandLabel.ForeColor = _activePalette.Text;
         _pageTitleLabel.ForeColor = _activePalette.Text;
@@ -276,6 +313,7 @@ internal sealed partial class MainShellForm
 
     private void SetActivePage(PageKind page, bool updateRadioSelection = false)
     {
+        SuspendDrawing(_pageHost);
         _pageHost.SuspendLayout();
 
         try
@@ -301,11 +339,15 @@ internal sealed partial class MainShellForm
 
             _pageHost.AutoScrollPosition = Point.Empty;
             UpdatePageHeader();
-            ApplyTheme(GetSelectedThemeMode());
+
+            // Both pages are already themed; only the sidebar nav buttons change
+            // selection state here, so re-theme just that strip instead of the whole form.
+            ApplyTheme(GetSelectedThemeMode(), _mainNavButton.Parent);
         }
         finally
         {
             _pageHost.ResumeLayout(performLayout: true);
+            ResumeDrawing(_pageHost);
         }
     }
 
@@ -332,30 +374,49 @@ internal sealed partial class MainShellForm
 
     private void SetSettingsSection(SettingsSection section, bool updateRadioSelection = false)
     {
-        _currentSettingsSection = section;
+        // Batch layout only. No paint suspension here: every card is already parented
+        // (so there is no re-parent flash to hide), and cards have different heights, so
+        // suppressing redraw would skip erasing the previous card's vacated area and leave
+        // it showing behind the new one. A plain visibility swap erases and repaints cleanly.
+        _settingsContentHost.SuspendLayout();
 
-        if (updateRadioSelection)
+        try
         {
-            _settingsGeneralTabButton.Checked = section == SettingsSection.General;
-            _settingsAutomationTabButton.Checked = section == SettingsSection.Automation;
-            _settingsShortcutsTabButton.Checked = section == SettingsSection.Shortcuts;
-            _settingsToggleRulesTabButton.Checked = section == SettingsSection.ToggleRules;
-            _settingsOverlayTabButton.Checked = section == SettingsSection.Overlay;
-            _settingsProfilesTabButton.Checked = section == SettingsSection.Profiles;
+            _currentSettingsSection = section;
+
+            if (updateRadioSelection)
+            {
+                _settingsGeneralTabButton.Checked = section == SettingsSection.General;
+                _settingsAutomationTabButton.Checked = section == SettingsSection.Automation;
+                _settingsShortcutsTabButton.Checked = section == SettingsSection.Shortcuts;
+                _settingsToggleRulesTabButton.Checked = section == SettingsSection.ToggleRules;
+                _settingsOverlayTabButton.Checked = section == SettingsSection.Overlay;
+                _settingsProfilesTabButton.Checked = section == SettingsSection.Profiles;
+            }
+
+            // Every card is already parented to the host; switching sections only toggles
+            // which one is visible. No card is re-parented, so there is no handle
+            // recreation and no flash of a half-rendered frame.
+            var activeCard = GetSettingsSectionCard(section);
+            foreach (Control card in _settingsContentHost.Controls)
+            {
+                card.Visible = card == activeCard;
+            }
+
+            activeCard.BringToFront();
+            UpdatePageHeader();
+            _pageHost.AutoScrollPosition = Point.Empty;
+
+            if (_shellLayout is not null)
+            {
+                // Only the settings tab buttons and the shown card change here, so
+                // re-theme just the settings page rather than the entire form.
+                ApplyTheme(GetSelectedThemeMode(), _settingsPage);
+            }
         }
-
-        if (_settingsContentHost.Controls.Count > 0)
+        finally
         {
-            _settingsContentHost.Controls.Clear();
-        }
-
-        _settingsContentHost.Controls.Add(GetSettingsSectionCard(section));
-        UpdatePageHeader();
-        _pageHost.AutoScrollPosition = Point.Empty;
-
-        if (_shellLayout is not null)
-        {
-            ApplyTheme(GetSelectedThemeMode());
+            _settingsContentHost.ResumeLayout(performLayout: true);
         }
     }
 
