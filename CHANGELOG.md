@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [2.2.1] - 2026-10-27
+
+### Fixed
+
+- **탭 전환 잔상·겹침·깜빡임 제거 / Smoother tab switching** — 설정 섹션을 전환할 때 이전 카드가 뒤에 겹쳐 보이거나, 내용이 채워지기 전 반쯤 그려진 빈 영역(잔상)이 먼저 나타나던 현상을 없앴습니다. 카드를 매번 다시 붙이는 대신 미리 올려두고 보이기만 전환하며, 테마 적용 범위를 바뀐 영역으로 좁히고, 섹션 호스트를 합성 패널로 그려 한 프레임에 완성된 화면이 나타납니다. Fixed the previous section card showing behind the new one, and the half-drawn empty skeleton that appeared before content filled in, when switching settings sections. Cards are now mounted once and toggled by visibility instead of being re-parented, theme re-apply is scoped to the changed area, and the section host composites its children into a single finished frame.
+
 ## [2.2.0] - 2026-10-27
 
 ### Added
