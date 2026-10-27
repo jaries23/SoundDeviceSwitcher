@@ -35,6 +35,29 @@ powershell -ExecutionPolicy Bypass -File scripts\Publish-Release.ps1
 
 생성 결과는 `artifacts/release/` 아래에 저장됩니다.
 
+### 코드 서명 선택 사항
+
+서명 설정이 없으면 릴리즈 자산은 unsigned 상태로 생성됩니다. 아래 값 중 하나를 지정하면 `SoundDeviceSwitcher.exe`와 `setup.exe`에 Authenticode 서명이 적용됩니다.
+
+인증서 저장소 thumbprint 사용:
+
+```powershell
+$env:SDS_SIGN_CERT_THUMBPRINT = "YOUR_CERTIFICATE_THUMBPRINT"
+$env:SDS_SIGN_TIMESTAMP_URL = "https://YOUR_TIMESTAMP_SERVER"
+powershell -ExecutionPolicy Bypass -File scripts\Publish-Release.ps1
+```
+
+PFX 파일 사용:
+
+```powershell
+$env:SDS_SIGN_PFX_PATH = "C:\secure\codesign.pfx"
+$env:SDS_SIGN_PFX_PASSWORD = "YOUR_PFX_PASSWORD"
+$env:SDS_SIGN_TIMESTAMP_URL = "https://YOUR_TIMESTAMP_SERVER"
+powershell -ExecutionPolicy Bypass -File scripts\Publish-Release.ps1
+```
+
+필요하면 `-UseMachineCertificateStore` 옵션으로 LocalMachine 인증서 저장소를 사용할 수 있습니다.
+
 ## English
 
 SoundDeviceSwitcher is a standalone Windows tray app that lets you configure two playback devices and switch between them from the app, the tray, a global hotkey, or a toggle shortcut. It detects the current default playback device, switches to the other configured device, updates both the default playback and default communications device, and shows a notification with the result.
@@ -68,3 +91,26 @@ powershell -ExecutionPolicy Bypass -File scripts\Publish-Release.ps1
 ```
 
 The generated files are written to `artifacts/release/`.
+
+### Optional Code Signing
+
+If no signing settings are provided, release artifacts are produced unsigned. When you provide one of the options below, the script signs both `SoundDeviceSwitcher.exe` and `setup.exe` with Authenticode.
+
+Using a certificate store thumbprint:
+
+```powershell
+$env:SDS_SIGN_CERT_THUMBPRINT = "YOUR_CERTIFICATE_THUMBPRINT"
+$env:SDS_SIGN_TIMESTAMP_URL = "https://YOUR_TIMESTAMP_SERVER"
+powershell -ExecutionPolicy Bypass -File scripts\Publish-Release.ps1
+```
+
+Using a PFX file:
+
+```powershell
+$env:SDS_SIGN_PFX_PATH = "C:\secure\codesign.pfx"
+$env:SDS_SIGN_PFX_PASSWORD = "YOUR_PFX_PASSWORD"
+$env:SDS_SIGN_TIMESTAMP_URL = "https://YOUR_TIMESTAMP_SERVER"
+powershell -ExecutionPolicy Bypass -File scripts\Publish-Release.ps1
+```
+
+Use `-UseMachineCertificateStore` if the signing certificate is installed in the LocalMachine certificate store.
